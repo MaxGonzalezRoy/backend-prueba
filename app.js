@@ -1,59 +1,160 @@
-require('dotenv').config();
 const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-const handlebars = require('express-handlebars');
+const { engine } = require('express-handlebars');
 const path = require('path');
 const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const config = require('./config/config');
 
-// Inicialización
+// Managers
+const ProductManager = require('./src/managers/ProductManager');
+const CartManager = require('./src/managers/CartManager');
+const productManager = new ProductManager();
+const cartManager = new CartManager();
+
+// Rutas
+const productsRouter = require('./src/routes/products');
+const cartsRouter = require('./src/routes/carts');
+
 const app = express();
 const httpServer = createServer(app);
+const io = new Server(httpServer);
 
-// Configuración de Socket.io
-const io = new Server(httpServer, {
-    cors: {
-        origin: config.app.frontendUrl,
-        methods: ['GET', 'POST', 'PUT', 'DELETE']
-    }
-});
-
-// Middlewares básicos
-app.use(helmet());
-app.use(cors({ origin: config.app.frontendUrl }));
-app.use(morgan('dev'));
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Configuración de Handlebars
-app.engine('handlebars', handlebars.engine({
+app.engine('handlebars', engine({
     defaultLayout: 'main',
-    extname: '.handlebars',
-    helpers: require('./src/utils/helpers')
+    helpers: {
+        json: (context) => JSON.stringify(context),
+    }
 }));
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'views'));
 
-// Rutas
-app.use('/api/products', require('./src/routes/products'));
-app.use('/api/carts', require('./src/routes/carts'));
-app.use('/', require('./src/routes/views'));
+app.use(cors({
+    origin: ['http://localhost:8080'],
+}));
 
-// Sockets
-require('./src/sockets/product.sockets')(io);
-require('./src/sockets/cart.sockets')(io);
+app.use('/api/products', productsRouter);
+app.use('/api/carts', cartsRouter);
 
-// Manejo de errores
-app.use(require('./src/middlewares/errorHandler'));
+app.get('/', async (req, res) => {
+    try {
+        const products = await productManager.getProducts();
+        res.render('home', { products });
+    } catch (error) {
+        res.status(500).send('Error al obtener productos');
+    }
+});
 
-// Iniciar servidor
-httpServer.listen(config.app.port, () => {
-    console.log(`🚀 Servidor escuchando en http://localhost:${config.app.port}`);
-    console.log(`Entorno: ${config.app.env}`);
+app.get('/productos', async (req, res) => {
+    try {
+        const products = await productManager.getProducts();
+        res.render('products', { products });
+    } catch (error) {
+        res.status(500).send('Error al obtener productos');
+    }
+});
+
+app.get('/contacto', (req, res) => {
+    res.render('contact');
+});
+
+app.get('/cart', async (req, res) => {
+    try {
+        const cartId = 1;
+        const cart = await cartManager.getCartById(cartId);
+
+        const enrichedProducts = await Promise.all(
+            cart.products.map(async (item) => {
+                const product = await productManager.getProductById(item.product);
+                return {
+                    id: item.product,
+                    title: product.title,
+                    price: product.price,
+                    quantity: item.quantity,
+                    total: product.price * item.quantity
+                };
+            })
+        );
+
+        const total = enrichedProducts.reduce((sum, p) => sum + p.total, 0);
+
+        res.render('cart', { products: enrichedProducts, total });
+    } catch (error) {
+        res.status(500).send('Error al cargar el carrito');
+    }
+});
+
+io.on('connection', async (socket) => {
+    console.log('🟢 Nuevo cliente conectado');
+
+    const sendUpdatedProducts = async (toastMessage = null) => {
+        try {
+            const products = await productManager.getProducts();
+            io.emit('products', products);
+            if (toastMessage) socket.emit('toast', toastMessage);
+        } catch (error) {
+            socket.emit('error', error.message);
+        }
+    };
+
+    try {
+        const products = await productManager.getProducts();
+        socket.emit('products', products);
+    } catch (error) {
+        console.error('Error al obtener productos:', error);
+    }
+
+    socket.on('new-product', async (data) => {
+        try {
+            await productManager.addProduct(data);
+            await sendUpdatedProducts('✅ Producto agregado con éxito');
+        } catch (error) {
+            socket.emit('error', error.message);
+        }
+    });
+
+    socket.on('delete-product', async (id) => {
+        try {
+            await productManager.deleteProduct(id);
+            await sendUpdatedProducts('🗑️ Producto eliminado correctamente');
+        } catch (error) {
+            socket.emit('error', error.message);
+        }
+    });
+
+    socket.on('update-product', async (updatedProduct) => {
+        try {
+            await productManager.updateProduct(updatedProduct.id, updatedProduct);
+            await sendUpdatedProducts('✅ Producto actualizado con éxito');
+        } catch (error) {
+            socket.emit('error', error.message);
+        }
+    });
+
+    socket.on('add-to-cart', async ({ productId, quantity }) => {
+        try {
+            const cartId = 'test-cart-id';
+            await cartManager.addProductToCart(cartId, productId, quantity);
+            const updatedCart = await cartManager.getCartById(cartId);
+            socket.emit('cart-updated', updatedCart);
+        } catch (error) {
+            socket.emit('error', error.message);
+        }
+    });
+});
+
+app.use((err, req, res, next) => {
+    console.error('Error details:', err);
+    res.status(500).json({ error: 'Internal Server Error', message: err.message, stack: err.stack });
+});
+
+const PORT = 8080;
+httpServer.listen(PORT, () => {
+    console.log(`🚀 Servidor activo en http://localhost:${PORT}`);
 });
 
 module.exports = app;
