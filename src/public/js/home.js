@@ -1,15 +1,28 @@
 const socket = io();
 
+// Función para agregar un producto al carrito
 window.addToCart = (productId) => {
-    const cartId = localStorage.getItem('cartId'); // Esto deberías haberlo guardado cuando se creó el carrito
+    const cartId = localStorage.getItem('cartId'); // Asegúrate de que este ID esté guardado cuando se cree el carrito
     if (!cartId) {
         alert("❌ No hay carrito activo. Creá uno primero.");
         return;
     }
 
-    socket.emit('add-to-cart', { cartId, productId, quantity: 1 });
+    Swal.fire({
+        title: '¿Cuántos deseas agregar?',
+        input: 'number',
+        inputValue: 1,
+        showCancelButton: true,
+        confirmButtonText: 'Agregar al carrito',
+    }).then(result => {
+        if (result.isConfirmed) {
+            const quantity = result.value || 1;  // Se asegura de que la cantidad sea un número positivo
+            socket.emit('add-to-cart', { cartId, productId, quantity });
+        }
+    });
 };
 
+// Escuchar evento de carrito actualizado
 socket.on('cart-updated', cart => {
     console.log("✅ Carrito actualizado:", cart);
     Swal.fire({
@@ -21,6 +34,7 @@ socket.on('cart-updated', cart => {
     });
 });
 
+// Escuchar errores
 socket.on('error', msg => {
     Swal.fire({
         icon: 'error',

@@ -1,0 +1,42 @@
+<h1>✉️ Contáctanos</h1>
+
+<form id="contact-form">
+    <div class="mb-3">
+        <label for="name" class="form-label">Nombre</label>
+        <input type="text" class="form-control" id="name" placeholder="Tu nombre">
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Correo electrónico</label>
+        <input type="email" class="form-control" id="email" placeholder="Tu correo">
+    </div>
+    <div class="mb-3">
+        <label for="message" class="form-label">Mensaje</label>
+        <textarea class="form-control" id="message" rows="3" placeholder="Tu mensaje"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Enviar</button>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.getElementById('contact-form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Previene el envío por defecto del formulario
+
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const message = document.getElementById('message').value;
+
+        // Verificar que los campos no estén vacíos
+        if (!name || !email || !message) {
+            Swal.fire('Error', 'Por favor, completa todos los campos', 'error');
+            return;
+        }
+
+        // Simular un envío exitoso (Aquí deberías conectar con el backend)
+        Swal.fire('Mensaje enviado', 'Gracias por contactarnos', 'success').then(() => {
+            // Limpiar el formulario después del envío
+            document.getElementById('contact-form').reset();
+        });
+    });
+</script>
+
+<link rel="stylesheet" href="/styles.css">

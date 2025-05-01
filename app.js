@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const { engine } = require('express-handlebars');
 const path = require('path');
 const cors = require('cors');
+const hbs = require('express-handlebars');
 
 // Managers
 const ProductManager = require('./src/managers/ProductManager');
@@ -19,31 +20,44 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 
+// Socket.io (lógica separada)
+require('./src/socket/socket')(io, productManager, cartManager);
+
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'src', 'public')));
 
 app.engine('handlebars', engine({
     defaultLayout: 'main',
+    layoutsDir: path.join(__dirname, 'src', 'views', 'layouts'),
+    partialsDir: path.join(__dirname, 'src', 'views', 'partials'),
     helpers: {
         json: (context) => JSON.stringify(context),
+        
+        // Helper para multiplicar cantidad y precio
+        multiply: (quantity, price) => quantity * price,
+
+        // Helper para calcular el total del carrito
+        calcTotal: (products) => products.reduce((total, product) => total + (product.quantity * product.product.price), 0)
     }
 }));
 app.set('view engine', 'handlebars');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, 'src', 'views'));
 
 app.use(cors({
     origin: ['http://localhost:8080'],
 }));
 
+// Rutas API
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 
+// Vistas
 app.get('/', async (req, res) => {
     try {
         const products = await productManager.getProducts();
-        res.render('home', { products });
+        res.render('pages/home', { products });
     } catch (error) {
         res.status(500).send('Error al obtener productos');
     }
@@ -52,14 +66,14 @@ app.get('/', async (req, res) => {
 app.get('/productos', async (req, res) => {
     try {
         const products = await productManager.getProducts();
-        res.render('products', { products });
+        res.render('pages/products', { products });
     } catch (error) {
         res.status(500).send('Error al obtener productos');
     }
 });
 
 app.get('/contacto', (req, res) => {
-    res.render('contact');
+    res.render('pages/contact');
 });
 
 app.get('/cart', async (req, res) => {
@@ -82,76 +96,19 @@ app.get('/cart', async (req, res) => {
 
         const total = enrichedProducts.reduce((sum, p) => sum + p.total, 0);
 
-        res.render('cart', { products: enrichedProducts, total });
+        res.render('pages/cart', { products: enrichedProducts, total });
     } catch (error) {
         res.status(500).send('Error al cargar el carrito');
     }
 });
 
-io.on('connection', async (socket) => {
-    console.log('🟢 Nuevo cliente conectado');
-
-    const sendUpdatedProducts = async (toastMessage = null) => {
-        try {
-            const products = await productManager.getProducts();
-            io.emit('products', products);
-            if (toastMessage) socket.emit('toast', toastMessage);
-        } catch (error) {
-            socket.emit('error', error.message);
-        }
-    };
-
-    try {
-        const products = await productManager.getProducts();
-        socket.emit('products', products);
-    } catch (error) {
-        console.error('Error al obtener productos:', error);
-    }
-
-    socket.on('new-product', async (data) => {
-        try {
-            await productManager.addProduct(data);
-            await sendUpdatedProducts('✅ Producto agregado con éxito');
-        } catch (error) {
-            socket.emit('error', error.message);
-        }
-    });
-
-    socket.on('delete-product', async (id) => {
-        try {
-            await productManager.deleteProduct(id);
-            await sendUpdatedProducts('🗑️ Producto eliminado correctamente');
-        } catch (error) {
-            socket.emit('error', error.message);
-        }
-    });
-
-    socket.on('update-product', async (updatedProduct) => {
-        try {
-            await productManager.updateProduct(updatedProduct.id, updatedProduct);
-            await sendUpdatedProducts('✅ Producto actualizado con éxito');
-        } catch (error) {
-            socket.emit('error', error.message);
-        }
-    });
-
-    socket.on('add-to-cart', async ({ productId, quantity }) => {
-        try {
-            const cartId = 'test-cart-id';
-            await cartManager.addProductToCart(cartId, productId, quantity);
-            const updatedCart = await cartManager.getCartById(cartId);
-            socket.emit('cart-updated', updatedCart);
-        } catch (error) {
-            socket.emit('error', error.message);
-        }
-    });
-});
-
+// Middleware de manejo de errores
 app.use((err, req, res, next) => {
     console.error('Error details:', err);
     res.status(500).json({ error: 'Internal Server Error', message: err.message, stack: err.stack });
 });
 
+// Servidor
 const PORT = 8080;
 httpServer.listen(PORT, () => {
     console.log(`🚀 Servidor activo en http://localhost:${PORT}`);

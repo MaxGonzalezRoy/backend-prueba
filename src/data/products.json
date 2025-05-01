@@ -48,5 +48,16 @@
     "id": 12,
     "status": true,
     "thumbnails": []
+  },
+  {
+    "title": "cassa",
+    "description": "cas",
+    "code": "cascs",
+    "price": 22,
+    "stock": 2,
+    "category": "d",
+    "id": 13,
+    "status": true,
+    "thumbnails": []
   }
 ]

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const CartManager = require('../managers/CartManager');
 const cartManager = new CartManager();
+const fs = require('fs').promises;
 
 router.post('/', async (req, res) => {
     try {
@@ -15,7 +16,7 @@ router.post('/', async (req, res) => {
 router.get('/cart/:cid', async (req, res) => {
     const cartId = req.params.cid;
     const cart = await cartManager.getCartById(cartId);
-    res.render('cart', { cart });
+    res.render('cart', { cart: cart, cartId: cartId });
 });
 
 router.delete('/:cid/product/:pid', async (req, res) => {
