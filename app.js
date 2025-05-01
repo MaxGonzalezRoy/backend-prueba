@@ -5,13 +5,11 @@ const { engine } = require('express-handlebars');
 const path = require('path');
 const cors = require('cors');
 
-// Managers
 const ProductManager = require('./src/managers/ProductManager');
 const CartManager = require('./src/managers/CartManager');
 const productManager = new ProductManager();
 const cartManager = new CartManager();
 
-// Rutas
 const productsRouter = require('./src/routes/products');
 const cartsRouter = require('./src/routes/carts');
 
@@ -19,10 +17,10 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer);
 
-// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors({ origin: ['http://localhost:8080'] }));
 
 app.engine('handlebars', engine({
     defaultLayout: 'main',
@@ -32,10 +30,6 @@ app.engine('handlebars', engine({
 }));
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'views'));
-
-app.use(cors({
-    origin: ['http://localhost:8080'],
-}));
 
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
@@ -67,6 +61,10 @@ app.get('/cart', async (req, res) => {
         const cartId = 1;
         const cart = await cartManager.getCartById(cartId);
 
+        if (!cart) {
+            return res.status(404).send('Carrito no encontrado');
+        }
+
         const enrichedProducts = await Promise.all(
             cart.products.map(async (item) => {
                 const product = await productManager.getProductById(item.product);
@@ -84,6 +82,7 @@ app.get('/cart', async (req, res) => {
 
         res.render('cart', { products: enrichedProducts, total });
     } catch (error) {
+        console.error('Error en /cart:', error);
         res.status(500).send('Error al cargar el carrito');
     }
 });
@@ -137,11 +136,12 @@ io.on('connection', async (socket) => {
 
     socket.on('add-to-cart', async ({ productId, quantity }) => {
         try {
-            const cartId = 'test-cart-id';
+            const cartId = 1;
             await cartManager.addProductToCart(cartId, productId, quantity);
             const updatedCart = await cartManager.getCartById(cartId);
             socket.emit('cart-updated', updatedCart);
         } catch (error) {
+            console.error('Error en add-to-cart:', error);
             socket.emit('error', error.message);
         }
     });
@@ -149,7 +149,7 @@ io.on('connection', async (socket) => {
 
 app.use((err, req, res, next) => {
     console.error('Error details:', err);
-    res.status(500).json({ error: 'Internal Server Error', message: err.message, stack: err.stack });
+    res.status(500).json({ error: 'Internal Server Error', message: err.message });
 });
 
 const PORT = 8080;

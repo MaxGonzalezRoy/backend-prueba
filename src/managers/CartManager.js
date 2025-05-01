@@ -5,7 +5,7 @@ const ProductManager = require('./ProductManager');
 class CartManager {
     constructor() {
         this.path = path.join(__dirname, '../data/carts.json');
-        this.productManager = new ProductManager(); // Instanciado UNA vez
+        this.productManager = new ProductManager();
         this.initializeFile();
     }
 
@@ -21,6 +21,10 @@ class CartManager {
         }
     }
 
+    async saveCarts(carts) {
+        await fs.writeFile(this.path, JSON.stringify(carts, null, 2));
+    }
+
     async createCart() {
         const carts = await this.getCarts();
         const newCart = {
@@ -28,7 +32,7 @@ class CartManager {
             products: []
         };
         carts.push(newCart);
-        await fs.writeFile(this.path, JSON.stringify(carts, null, 2));
+        await this.saveCarts(carts);
         return newCart;
     }
 
@@ -39,23 +43,10 @@ class CartManager {
 
     async getCartById(id) {
         if (isNaN(id)) throw new Error('Cart ID must be a number');
-    
         const carts = await this.getCarts();
         const cart = carts.find(c => c.id === id);
         if (!cart) throw new Error(`Cart with ID ${id} not found`);
-    
-        const detailedProducts = await Promise.all(
-            cart.products.map(async (item) => {
-                const product = await this.productManager.getProductById(item.product);
-                return {
-                    ...product,
-                    quantity: item.quantity,
-                    total: item.quantity * product.price
-                };
-            })
-        );
-    
-        return { id: cart.id, products: detailedProducts };
+        return cart;
     }
 
     async addProductToCart(cartId, productId, quantity = 1) {
@@ -79,7 +70,7 @@ class CartManager {
             carts[cartIndex].products.push({ product: productId, quantity });
         }
 
-        await fs.writeFile(this.path, JSON.stringify(carts, null, 2));
+        await this.saveCarts(carts);
         return carts[cartIndex];
     }
 }

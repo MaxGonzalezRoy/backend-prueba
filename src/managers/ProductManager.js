@@ -14,16 +14,39 @@ class ProductManager {
                 await fs.writeFile(this.path, JSON.stringify([], null, 2));
             });
         } catch (error) {
-            console.error('Error initializing products file:', error);
+            console.error('❌ Error al inicializar el archivo de productos:', error);
             throw error;
         }
     }
 
+    async saveProducts(products) {
+        await fs.writeFile(this.path, JSON.stringify(products, null, 2));
+    }
+
+    async getProducts() {
+        const data = await fs.readFile(this.path, 'utf-8');
+        const parsed = JSON.parse(data);
+        console.log("📦 Total de productos cargados:", parsed.length);
+        return parsed;
+    }
+
+    async getProductById(id) {
+        id = Number(id);
+        if (isNaN(id)) throw new Error('Product ID must be a number');
+
+        const products = await this.getProducts();
+        const product = products.find(p => p.id === id);
+        if (!product) throw new Error(`Product with ID ${id} not found`);
+        return product;
+    }
+
     async addProduct(product) {
         const requiredFields = ['title', 'description', 'code', 'price', 'stock', 'category'];
-        requiredFields.forEach(field => {
-            if (!product[field]) throw new Error(`Missing required field: ${field}`);
-        });
+        for (const field of requiredFields) {
+            if (!product[field]) {
+                throw new Error(`Missing required field: ${field}`);
+            }
+        }
 
         const products = await this.getProducts();
         if (products.some(p => p.code === product.code)) {
@@ -38,27 +61,12 @@ class ProductManager {
         };
 
         products.push(newProduct);
-        await fs.writeFile(this.path, JSON.stringify(products, null, 2));
+        await this.saveProducts(products);
         return newProduct;
     }
 
-    async getProducts() {
-        const data = await fs.readFile(this.path, 'utf-8');
-        const parsed = JSON.parse(data);
-        console.log("📦 Total de productos cargados:", parsed.length);
-        return parsed;
-    }
-
-    async getProductById(id) {
-        if (isNaN(id)) throw new Error('Product ID must be a number');
-        
-        const products = await this.getProducts();
-        const product = products.find(p => p.id === id);
-        if (!product) throw new Error(`Product with ID ${id} not found`);
-        return product;
-    }
-
     async updateProduct(id, updatedFields) {
+        id = Number(id);
         if (isNaN(id)) throw new Error('Product ID must be a number');
         if (updatedFields.id) throw new Error("Cannot update product ID");
 
@@ -67,11 +75,12 @@ class ProductManager {
         if (index === -1) throw new Error(`Product with ID ${id} not found`);
 
         products[index] = { ...products[index], ...updatedFields };
-        await fs.writeFile(this.path, JSON.stringify(products, null, 2));
+        await this.saveProducts(products);
         return products[index];
     }
 
     async deleteProduct(id) {
+        id = Number(id);
         if (isNaN(id)) throw new Error('Product ID must be a number');
 
         const products = await this.getProducts();
@@ -80,7 +89,7 @@ class ProductManager {
             throw new Error(`Product with ID ${id} not found`);
         }
 
-        await fs.writeFile(this.path, JSON.stringify(newProducts, null, 2));
+        await this.saveProducts(newProducts);
         return true;
     }
 }
