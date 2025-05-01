@@ -1,0 +1,152 @@
+<section class="product-page">
+    <h1>📦 Lista de Productos</h1>
+
+    <form id="product-form">
+        <input type="hidden" id="product-id" />
+        <input type="text" id="title" placeholder="Título" required />
+        <input type="text" id="description" placeholder="Descripción" required />
+        <input type="text" id="code" placeholder="Código" required />
+        <input type="number" id="price" placeholder="Precio" required />
+        <input type="number" id="stock" placeholder="Stock" required />
+        <input type="text" id="category" placeholder="Categoría" required />
+        <button type="submit">Guardar producto</button>
+    </form>
+
+    <div class="product-list">
+        {{#if products.length}}
+            {{#each products}}
+                <article class="product-card" data-id="{{this.id}}">
+                    <h2>{{this.title}}</h2>
+                    <p><strong>Precio:</strong> ${{this.price}}</p>
+                    <p><strong>Descripción:</strong> {{this.description}}</p>
+                    <p><strong>Categoría:</strong> {{this.category}}</p>
+                    <button class="btn-delete">🗑️ Eliminar</button>
+                    <button class="btn-edit">✏️ Editar</button>
+                    <button class="btn-add-cart">Agregar al carrito 🛒</button>
+                </article>
+            {{/each}}
+        {{else}}
+            <p>No hay productos disponibles en este momento. 🚫</p>
+        {{/if}}
+    </div>
+</section>
+
+<link rel="stylesheet" href="/css/productos.css">
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    const socket = io();
+
+    const form = document.getElementById('product-form');
+    const idInput = document.getElementById('product-id');
+    const titleInput = document.getElementById('title');
+    const descInput = document.getElementById('description');
+    const codeInput = document.getElementById('code');
+    const priceInput = document.getElementById('price');
+    const stockInput = document.getElementById('stock');
+    const categoryInput = document.getElementById('category');
+    const productList = document.querySelector('.product-list');
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const product = {
+            title: titleInput.value,
+            description: descInput.value,
+            code: codeInput.value,
+            price: parseFloat(priceInput.value),
+            stock: parseInt(stockInput.value),
+            category: categoryInput.value
+        };
+
+        const id = idInput.value;
+
+        if (id) {
+            product.id = id;
+            socket.emit('update-product', product);
+        } else {
+            socket.emit('new-product', product);
+        }
+
+        form.reset();
+        idInput.value = '';
+    });
+
+    productList.addEventListener('click', (e) => {
+        const article = e.target.closest('article');
+        const productId = article?.dataset.id;
+
+        if (e.target.classList.contains('btn-delete')) {
+            socket.emit('delete-product', productId);
+        }
+
+        if (e.target.classList.contains('btn-edit')) {
+            titleInput.value = article.querySelector('h2').textContent;
+            descInput.value = article.querySelector('p:nth-of-type(2)').textContent.split(': ')[1];
+            categoryInput.value = article.querySelector('p:nth-of-type(3)').textContent.split(': ')[1];
+            priceInput.value = parseFloat(article.querySelector('p:nth-of-type(1)').textContent.replace(/[^0-9.]/g, ''));
+            stockInput.value = 10;
+            codeInput.value = 'ABC123';
+            idInput.value = productId;
+        }
+
+        if (e.target.classList.contains('btn-add-cart')) {
+            addToCart(productId);
+        }
+    });
+
+    function addToCart(productId) {
+        Swal.fire({
+            title: '¿Cuántos deseas agregar?',
+            input: 'number',
+            inputValue: 1,
+            showCancelButton: true,
+            confirmButtonText: 'Agregar',
+        }).then(result => {
+            if (result.isConfirmed) {
+                const qty = Number(result.value) || 1;
+
+                fetch(`/api/carts/1/product/${productId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quantity: qty })
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Error al agregar');
+                    return res.json();
+                })
+                .then(() => {
+                    Swal.fire('✅ Agregado al carrito', '', 'success');
+                })
+                .catch(() => {
+                    Swal.fire('❌ Error al agregar al carrito', '', 'error');
+                });
+            }
+        });
+    }
+
+    socket.on('products', (products) => {
+        productList.innerHTML = '';
+        if (products.length === 0) {
+            productList.innerHTML = '<p>No hay productos disponibles en este momento. 🚫</p>';
+            return;
+        }
+        products.forEach(prod => {
+            productList.innerHTML += `
+                <article class="product-card" data-id="${prod.id}">
+                    <h2>${prod.title}</h2>
+                    <p><strong>Precio:</strong> $${prod.price}</p>
+                    <p><strong>Descripción:</strong> ${prod.description}</p>
+                    <p><strong>Categoría:</strong> ${prod.category}</p>
+                    <button class="btn-delete">🗑️ Eliminar</button>
+                    <button class="btn-edit">✏️ Editar</button>
+                    <button class="btn-add-cart">Agregar al carrito 🛒</button>
+                </article>
+            `;
+        });
+    });
+
+    socket.on('toast', msg => alert(msg));
+    socket.on('error', msg => alert('⚠️ Error: ' + msg));
+</script>

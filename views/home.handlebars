@@ -1,0 +1,23 @@
+<section class="product-page">
+    <h1>📦 Lista de Productos</h1>
+
+    <div class="product-list">
+        {{#if products.length}}
+            {{#each products}}
+                <article class="product-card">
+                    <h2>{{this.title}}</h2>
+                    <p><strong>Precio:</strong> ${{this.price}}</p>
+                    <p><strong>Descripción:</strong> {{this.description}}</p>
+                    <p><strong>Categoría:</strong> {{this.category}}</p>
+                    <button class="btn-add-cart" data-id="{{this.id}}">Agregar al carrito 🛒</button>
+                </article>
+            {{/each}}
+        {{else}}
+            <p>No hay productos disponibles en este momento. 🚫</p>
+        {{/if}}
+    </div>
+</section>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/home.js"></script>
+<link rel="stylesheet" href="/css/productos.css">

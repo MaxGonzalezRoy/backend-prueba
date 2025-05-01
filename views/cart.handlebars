@@ -1,0 +1,79 @@
+<h1>🛒 Tu Carrito</h1>
+
+{{#if cart.products.length}}
+<table class="table">
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Total</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each cart.products}}
+        <tr>
+            <td>{{this.product.title}}</td>
+            <td>{{this.quantity}}</td>
+            <td>${{this.product.price}}</td>
+            <td>${{multiply this.quantity this.product.price}}</td>
+            <td>
+                <button class="btn btn-sm btn-success" onclick="updateProduct('{{this.product._id}}')">➕</button>
+                <button class="btn btn-sm btn-danger" onclick="removeProduct('{{this.product._id}}')">🗑️</button>
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
+
+<h3 class="mt-4">
+    Total: 
+    <strong>
+        ${{calcTotal cart.products}}
+    </strong>
+</h3>
+<button class="btn btn-success mt-3">Proceder al Pago</button>
+{{else}}
+    <p>🚫 Tu carrito está vacío.</p>
+{{/if}}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function updateProduct(productId) {
+        Swal.fire({
+            title: '¿Cuántos deseas agregar?',
+            input: 'number',
+            inputValue: 1,
+            showCancelButton: true,
+            confirmButtonText: 'Agregar',
+        }).then(result => {
+            if (result.isConfirmed) {
+                fetch(`/api/carts/{{cart._id}}/product/${productId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quantity: Number(result.value) || 1 })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    Swal.fire('✅ Producto agregado', '', 'success').then(() => location.reload());
+                })
+                .catch(() => Swal.fire('❌ Error al agregar', '', 'error'));
+            }
+        });
+    }
+
+    function removeProduct(productId) {
+        Swal.fire('¿Estás seguro?', 'Esto eliminará el producto del carrito', 'warning')
+        .then(result => {
+            if (result.isConfirmed) {
+                fetch(`/api/carts/{{cart._id}}/product/${productId}`, {
+                    method: 'DELETE'
+                })
+                .then(res => res.json())
+                .then(() => Swal.fire('🗑️ Eliminado', '', 'success').then(() => location.reload()))
+                .catch(() => Swal.fire('❌ Error al eliminar', '', 'error'));
+            }
+        });
+    }
+</script>
