@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Products</title>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <h1>🟢 Productos en Tiempo Real</h1>
+
+    <h2>Agregar nuevo producto</h2>
+    <form id="productForm">
+        <input type="text" name="title" placeholder="Título" required>
+        <input type="text" name="description" placeholder="Descripción" required>
+        <input type="text" name="code" placeholder="Código" required>
+        <input type="number" name="price" placeholder="Precio" required>
+        <input type="number" name="stock" placeholder="Stock" required>
+        <input type="text" name="category" placeholder="Categoría" required>
+        <input type="text" name="thumbnails" placeholder="Thumbnails (coma separadas)">
+        <button type="submit">Agregar Producto</button>
+    </form>
+
+    <h2>Lista de productos</h2>
+    <ul id="productList">
+        {{#each products}}
+        <li><strong>{{title}}</strong> - ${{price}} (Stock: {{stock}})</li>
+        {{/each}}
+    </ul>
+
+    <script>
+        const socket = io();
+
+        const form = document.getElementById('productForm');
+        const productList = document.getElementById('productList');
+
+        form.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const formData = new FormData(form);
+        const data = {};
+        formData.forEach((value, key) => {
+            if (key === 'thumbnails') {
+            data[key] = value.split(',').map(str => str.trim());
+            } else if (key === 'price' || key === 'stock') {
+            data[key] = parseFloat(value);
+            } else {
+            data[key] = value;
+            }
+        });
+
+        const res = await fetch('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        form.reset();
+        });
+
+        socket.on('productListUpdated', products => {
+        productList.innerHTML = '';
+        products.forEach(p => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${p.title}</strong> - $${p.price} (Stock: ${p.stock})`;
+            productList.appendChild(li);
+        });
+        });
+    </script>
+</body>
+</html>

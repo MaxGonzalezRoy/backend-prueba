@@ -1,0 +1,24 @@
+# Node.js modules
+node_modules/
+
+# Archivos de configuración de entorno
+.env
+
+# Archivos de log
+*.log
+
+# Archivos de compilación
+dist/
+
+# Archivos del sistema operativo (pueden ser específicos a tu OS)
+Thumbs.db       # Windows
+
+# Archivos de dependencias y configuración de paquetes
+package-lock.json
+yarn.lock
+
+# Archivos de la base de datos si estuvieran presentes
+*.sqlite
+
+# Archivos temporales de edición
+*.swp
