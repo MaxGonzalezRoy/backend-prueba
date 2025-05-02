@@ -1,25 +1,10 @@
 {
-  "name": "backend-i",
-  "version": "1.0.0",
-  "description": "API REST para gestión de productos y carritos de compras",
-  "main": "src/app.js",
-  "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "test:products": "node src/app.js"
-  },
-  "keywords": [],
-  "author": "Max",
-  "license": "ISC",
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
+    "express": "^5.1.0",
     "express-handlebars": "^8.0.2",
-    "socket.io": "^4.8.1",
-    "sweetalert2": "^11.19.1"
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.1.10"
   }
 }

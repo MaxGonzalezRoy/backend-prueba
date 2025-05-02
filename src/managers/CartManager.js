@@ -1,87 +1,53 @@
-const fs = require('fs').promises;
-const path = require('path');
-const ProductManager = require('./ProductManager');
+import { promises as fs } from 'fs';
+import path from 'path';
 
-class CartManager {
+const cartsPath = path.resolve('src/data/carts.json');
+
+export default class CartManager {
     constructor() {
-        this.path = path.join(__dirname, '../data/carts.json');
-        this.productManager = new ProductManager(); // Instanciado UNA vez
-        this.initializeFile();
+        this.path = cartsPath;
     }
 
-    async initializeFile() {
+    async _loadCarts() {
         try {
-            await fs.mkdir(path.dirname(this.path), { recursive: true });
-            await fs.access(this.path).catch(async () => {
-                await fs.writeFile(this.path, JSON.stringify([], null, 2));
-            });
+            const data = await fs.readFile(this.path, 'utf-8');
+            return JSON.parse(data);
         } catch (error) {
-            console.error('Error initializing carts file:', error);
-            throw error;
+            return [];
         }
+    }
+
+    async _saveCarts(carts) {
+        await fs.writeFile(this.path, JSON.stringify(carts, null, 2));
     }
 
     async createCart() {
-        const carts = await this.getCarts();
-        const newCart = {
-            id: carts.length > 0 ? Math.max(...carts.map(c => c.id)) + 1 : 1,
-            products: []
-        };
+        const carts = await this._loadCarts();
+        const newId = carts.length ? carts[carts.length - 1].id + 1 : 1;
+        const newCart = { id: newId, products: [] };
         carts.push(newCart);
-        await fs.writeFile(this.path, JSON.stringify(carts, null, 2));
+        await this._saveCarts(carts);
         return newCart;
     }
 
-    async getCarts() {
-        const data = await fs.readFile(this.path, 'utf-8');
-        return JSON.parse(data);
-    }
-
     async getCartById(id) {
-        if (isNaN(id)) throw new Error('Cart ID must be a number');
-    
-        const carts = await this.getCarts();
-        const cart = carts.find(c => c.id === id);
-        if (!cart) throw new Error(`Cart with ID ${id} not found`);
-    
-        const detailedProducts = await Promise.all(
-            cart.products.map(async (item) => {
-                const product = await this.productManager.getProductById(item.product);
-                return {
-                    ...product,
-                    quantity: item.quantity,
-                    total: item.quantity * product.price
-                };
-            })
-        );
-    
-        return { id: cart.id, products: detailedProducts };
+        const carts = await this._loadCarts();
+        return carts.find(c => c.id === id);
     }
 
-    async addProductToCart(cartId, productId, quantity = 1) {
-        if (isNaN(cartId) || isNaN(productId) || quantity <= 0) {
-            throw new Error('Invalid cartId, productId or quantity');
-        }
+    async addProductToCart(cartId, productId) {
+            const carts = await this._loadCarts();
+            const cart = carts.find(c => c.id === cartId);
+        if (!cart) return null;
 
-        await this.productManager.getProductById(productId);
-
-        const carts = await this.getCarts();
-        const cartIndex = carts.findIndex(c => c.id === cartId);
-        if (cartIndex === -1) throw new Error(`Cart with ID ${cartId} not found`);
-
-        const productIndex = carts[cartIndex].products.findIndex(
-            p => p.product === productId
-        );
-
-        if (productIndex !== -1) {
-            carts[cartIndex].products[productIndex].quantity += quantity;
+            const productInCart = cart.products.find(p => p.product === productId);
+        if (productInCart) {
+            productInCart.quantity++;
         } else {
-            carts[cartIndex].products.push({ product: productId, quantity });
+            cart.products.push({ product: productId, quantity: 1 });
         }
 
-        await fs.writeFile(this.path, JSON.stringify(carts, null, 2));
-        return carts[cartIndex];
+        await this._saveCarts(carts);
+        return cart;
     }
 }
-
-module.exports = CartManager;
