@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "status": true,
+    "title": "gagag",
+    "description": "gaga",
+    "code": "gag",
+    "price": 12,
+    "stock": 212,
+    "category": "agasg",
+    "thumbnails": [
+      ""
+    ]
+  }
+]
