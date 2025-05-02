@@ -57,7 +57,7 @@
         form.reset();
         });
 
-        socket.on('productListUpdated', products => {
+        socket.on('productListUpdated', (products) => {
         productList.innerHTML = '';
         products.forEach(p => {
             const li = document.createElement('li');

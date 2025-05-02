@@ -16,4 +16,9 @@ router.get('/realtimeproducts', async (req, res) => {
     res.render('realTimeProducts', { products });
 });
 
+// Redirige raíz a /home
+router.get('/', (req, res) => {
+    res.redirect('/home');
+});
+
 export default router;

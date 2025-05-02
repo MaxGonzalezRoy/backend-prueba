@@ -27,6 +27,16 @@ app.engine('handlebars', handlebars.engine());
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, '/src/views'));
 
+// Configurar CSP para permitir fuentes externas (Google Fonts, etc.)
+app.use((req, res, next) => {
+    res.setHeader("Content-Security-Policy", 
+    "default-src 'self'; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " +
+    "font-src 'self' https://fonts.gstatic.com; " +
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;");
+    next();
+});
+
 // Rutas
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
