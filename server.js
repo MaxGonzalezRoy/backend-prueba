@@ -20,7 +20,7 @@ const io = new SocketIO(httpServer);
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'src/public')));
 
 // Motor de plantillas Handlebars
 app.engine('handlebars', exphbs.engine({
@@ -34,10 +34,12 @@ app.set('views', path.join(__dirname, 'src/views'));
 app.use((req, res, next) => {
     res.setHeader("Content-Security-Policy",
         "default-src 'self'; " +
-        "style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net; " +
-        "font-src https://fonts.gstatic.com; " +
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;"
-    );
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+        "font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
+        "connect-src 'self'; " +
+        "img-src 'self' data:;"
+    );    
     next();
 });
 

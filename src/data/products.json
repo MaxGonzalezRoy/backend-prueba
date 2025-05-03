@@ -24,5 +24,31 @@
     "thumbnails": [
       ""
     ]
+  },
+  {
+    "id": 3,
+    "status": true,
+    "title": "mghmghm",
+    "description": "fghmgmfghm",
+    "code": "mgfhmg",
+    "price": 4555,
+    "stock": 555,
+    "category": "mfgm",
+    "thumbnails": [
+      ""
+    ]
+  },
+  {
+    "id": 4,
+    "status": true,
+    "title": "roy",
+    "description": "fsf",
+    "code": "gag",
+    "price": 323,
+    "stock": 323,
+    "category": "kjgj",
+    "thumbnails": [
+      ""
+    ]
   }
 ]

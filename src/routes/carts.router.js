@@ -20,11 +20,13 @@ router.get('/:cid', async (req, res) => {
 
 // POST /api/carts/:cid/product/:pid - Agregar producto al carrito
 router.post('/:cid/product/:pid', async (req, res) => {
-    const cid = parseInt(req.params.cid);
-    const pid = parseInt(req.params.pid);
-    const updatedCart = await cartManagerInstance.addProductToCart(cid, pid);
-    if (!updatedCart) return res.status(404).json({ error: 'Carrito no encontrado' });
-    res.json(updatedCart);
+    const { cid, pid } = req.params;
+    try {
+        const cart = await cartManager.addProductToCart(cid, pid);
+        res.status(200).json(cart);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 export default router;
