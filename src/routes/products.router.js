@@ -2,12 +2,13 @@ import { Router } from 'express';
 import ProductManager from '../managers/productManager.js';
 const router = Router();
 
-const productManager = new ProductManager('./src/data/products.json');
+// Cambiar el nombre de la instancia para evitar conflicto
+const productMgr = new ProductManager(); // Renombrada la instancia a `productMgr`
 
 // GET /api/products - Obtener todos los productos
 router.get('/', async (req, res) => {
     try {
-        const products = await productManager.getProducts();
+        const products = await productMgr.getAll(); // Usar la nueva instancia
         res.json(products);
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener productos' });
@@ -18,10 +19,10 @@ router.get('/', async (req, res) => {
 router.get('/:pid', async (req, res) => {
     try {
         const pid = req.params.pid;
-        const product = await productManager.getProductById(pid);
+        const product = await productMgr.getById(pid); // Usar la nueva instancia
 
         if (!product) {
-        return res.status(404).json({ error: 'Producto no encontrado' });
+            return res.status(404).json({ error: 'Producto no encontrado' });
         }
 
         res.json(product);
@@ -38,19 +39,19 @@ router.post('/', async (req, res) => {
         // Validación básica
         const requiredFields = ['title', 'description', 'code', 'price', 'stock', 'category'];
         for (const field of requiredFields) {
-        if (!newProduct[field]) {
-            return res.status(400).json({ error: `Falta el campo obligatorio: ${field}` });
+            if (!newProduct[field]) {
+                return res.status(400).json({ error: `Falta el campo obligatorio: ${field}` });
+            }
         }
-        }
 
-    const addedProduct = await productManager.addProduct(newProduct);
+        const addedProduct = await productMgr.addProduct(newProduct); // Usar la nueva instancia
 
-    // Emitir actualización a todos los clientes
-    const io = req.app.get('socketio');
-    const updatedList = await productManager.getProducts();
-    io.emit('productListUpdated', updatedList);
+        // Emitir actualización a todos los clientes
+        const io = req.app.get('socketio');
+        const updatedList = await productMgr.getAll(); // Usar la nueva instancia
+        io.emit('productListUpdated', updatedList);
 
-    res.status(201).json({ message: 'Producto agregado', product: addedProduct });
+        res.status(201).json({ message: 'Producto agregado', product: addedProduct });
     } catch (error) {
         res.status(500).json({ error: 'Error al agregar el producto' });
     }
@@ -64,13 +65,13 @@ router.put('/:pid', async (req, res) => {
 
         // No se puede modificar el ID
         if (updateData.id) {
-        return res.status(400).json({ error: 'No se puede modificar el ID del producto' });
+            return res.status(400).json({ error: 'No se puede modificar el ID del producto' });
         }
 
-        const updatedProduct = await productManager.updateProduct(pid, updateData);
+        const updatedProduct = await productMgr.updateProduct(pid, updateData); // Usar la nueva instancia
 
         if (!updatedProduct) {
-        return res.status(404).json({ error: 'Producto no encontrado' });
+            return res.status(404).json({ error: 'Producto no encontrado' });
         }
 
         res.json({ message: 'Producto actualizado', product: updatedProduct });
@@ -83,20 +84,20 @@ router.put('/:pid', async (req, res) => {
 router.delete('/:pid', async (req, res) => {
     try {
         const pid = req.params.pid;
-        const result = await productManager.deleteProduct(pid);
+        const result = await productMgr.deleteProduct(pid); // Usar la nueva instancia
 
         if (!result) {
-        return res.status(404).json({ error: 'Producto no encontrado' });
+            return res.status(404).json({ error: 'Producto no encontrado' });
         }
 
         // Emitir actualización a todos los clientes
         const io = req.app.get('socketio');
-        const updatedList = await productManager.getProducts();
+        const updatedList = await productMgr.getAll(); // Usar la nueva instancia
         io.emit('productListUpdated', updatedList);
 
         res.json({ message: 'Producto eliminado correctamente' });
-        } catch (error) {
-            res.status(500).json({ error: 'Error al eliminar el producto' });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al eliminar el producto' });
     }
 });
 

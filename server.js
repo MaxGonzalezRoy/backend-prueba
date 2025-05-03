@@ -1,4 +1,5 @@
 import express from 'express';
+import exphbs from 'express-handlebars';
 import { createServer } from 'http';
 import { Server as SocketIO } from 'socket.io';
 import handlebars from 'express-handlebars';
@@ -20,12 +21,15 @@ const io = new SocketIO(httpServer);
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '/public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Motor de plantillas Handlebars
-app.engine('handlebars', handlebars.engine());
+app.engine('handlebars', exphbs.engine({
+    defaultLayout: 'main',
+    layoutsDir: path.join(__dirname, 'src/views/layouts'), 
+}));
 app.set('view engine', 'handlebars');
-app.set('views', path.join(__dirname, '/src/views'));
+app.set('views', path.join(__dirname, 'src/views'));
 
 // Configurar CSP para permitir fuentes externas (Google Fonts, etc.)
 app.use((req, res, next) => {

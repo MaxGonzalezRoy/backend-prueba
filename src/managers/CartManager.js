@@ -36,11 +36,11 @@ export default class CartManager {
     }
 
     async addProductToCart(cartId, productId) {
-            const carts = await this._loadCarts();
-            const cart = carts.find(c => c.id === cartId);
+        const carts = await this._loadCarts();
+        const cart = carts.find(c => c.id === cartId);
         if (!cart) return null;
 
-            const productInCart = cart.products.find(p => p.product === productId);
+        const productInCart = cart.products.find(p => p.product === productId);
         if (productInCart) {
             productInCart.quantity++;
         } else {
@@ -51,3 +51,4 @@ export default class CartManager {
         return cart;
     }
 }
+

@@ -1,83 +1,111 @@
-<h1 class="text-3xl font-bold mb-6 text-green-600">🟢 Productos en Tiempo Real</h1>
+<h1 class="text-center text-success fw-bold fs-2 mb-5">🟢 Productos en Tiempo Real</h1>
 
-<section class="mb-8">
-    <h2 class="text-xl font-semibold mb-4">➕ Agregar nuevo producto</h2>
-    <form id="productForm" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <input class="border p-2 rounded" type="text" name="title" placeholder="Título" required>
-        <input class="border p-2 rounded" type="text" name="description" placeholder="Descripción" required>
-        <input class="border p-2 rounded" type="text" name="code" placeholder="Código" required>
-        <input class="border p-2 rounded" type="number" name="price" placeholder="Precio" required>
-        <input class="border p-2 rounded" type="number" name="stock" placeholder="Stock" required>
-        <input class="border p-2 rounded" type="text" name="category" placeholder="Categoría" required>
-        <input class="border p-2 rounded col-span-full" type="text" name="thumbnails" placeholder="Thumbnails (coma separadas)">
-        <button class="col-span-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700" type="submit">
-            Agregar Producto
-        </button>
-    </form>
+<section class="mb-5">
+  <h2 class="fs-4 fw-semibold mb-3">➕ Agregar nuevo producto</h2>
+  <form id="productForm" class="row g-3">
+    <div class="col-md-6">
+      <input class="form-control" type="text" name="title" placeholder="Título" required />
+    </div>
+    <div class="col-md-6">
+      <input class="form-control" type="text" name="description" placeholder="Descripción" required />
+    </div>
+    <div class="col-md-4">
+      <input class="form-control" type="text" name="code" placeholder="Código" required />
+    </div>
+    <div class="col-md-4">
+      <input class="form-control" type="number" name="price" placeholder="Precio" required />
+    </div>
+    <div class="col-md-4">
+      <input class="form-control" type="number" name="stock" placeholder="Stock" required />
+    </div>
+    <div class="col-md-6">
+      <input class="form-control" type="text" name="category" placeholder="Categoría" required />
+    </div>
+    <div class="col-md-6">
+      <input class="form-control" type="text" name="thumbnails" placeholder="Thumbnails (coma separadas)" />
+    </div>
+    <div class="col-12">
+      <button class="btn btn-success w-100" type="submit">Agregar Producto</button>
+    </div>
+  </form>
 </section>
 
 <section>
-    <h2 class="text-xl font-semibold mb-4">📦 Lista de productos</h2>
-    <ul id="productList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {{#each products}}
-        <li class="border p-4 rounded shadow bg-white">
-            <h3 class="text-lg font-bold text-blue-600">{{title}}</h3>
-            <p class="text-gray-700">Descripción: {{description}}</p>
-            <p class="text-green-700 font-semibold">$ {{price}}</p>
-            <p class="text-sm text-gray-500">Stock: {{stock}}</p>
-        </li>
-        {{/each}}
-    </ul>
+  <h2 class="fs-4 fw-semibold mb-3">📦 Lista de productos</h2>
+  <div id="productList" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+    {{#each products}}
+      <div class="col">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title text-primary fw-bold">{{title}}</h5>
+            <p class="card-text">{{description}}</p>
+            <p class="text-success fw-semibold">$ {{price}}</p>
+            <p class="text-muted small">Stock: {{stock}}</p>
+          </div>
+        </div>
+      </div>
+    {{/each}}
+  </div>
 </section>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-    const socket = io();
+  const socket = io();
+  const form = document.getElementById('productForm');
+  const productList = document.getElementById('productList');
 
-    const form = document.getElementById('productForm');
-    const productList = document.getElementById('productList');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-    form.addEventListener('submit', async e => {
-        e.preventDefault();
-
-        const formData = new FormData(form);
-        const data = {};
-        formData.forEach((value, key) => {
-            if (key === 'thumbnails') {
-                data[key] = value.split(',').map(str => str.trim());
-            } else if (key === 'price' || key === 'stock') {
-                data[key] = parseFloat(value);
-            } else {
-                data[key] = value;
-            }
+    const formData = new FormData(form);
+    const data = {};
+    formData.forEach((value, key) => {
+      if (key === 'thumbnails') {
+        data[key] = value.split(',').map(str => str.trim());
+      } else if (key === 'price' || key === 'stock') {
+        data[key] = parseFloat(value);
+      } else {
+        data[key] = value;
+      }
     });
 
     const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     });
 
+    const result = await res.json();
     if (res.ok) {
-        form.reset();
+      form.reset();
+      Swal.fire({
+        title: '¡Producto agregado!',
+        text: 'Se ha agregado correctamente.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      });
     } else {
-        const error = await res.json();
-        alert(error.message || 'Error al agregar el producto.');
+      Swal.fire('Error', result.message || 'No se pudo agregar el producto.', 'error');
     }
-    });
+  });
 
-    socket.on('productListUpdated', (products) => {
-        productList.innerHTML = '';
-        products.forEach(p => {
-            const li = document.createElement('li');
-            li.className = 'border p-4 rounded shadow bg-white';
-            li.innerHTML = `
-                <h3 class="text-lg font-bold text-blue-600">${p.title}</h3>
-                <p class="text-gray-700">Descripción: ${p.description}</p>
-                <p class="text-green-700 font-semibold">$ ${p.price}</p>
-                <p class="text-sm text-gray-500">Stock: ${p.stock}</p>
-        `;
-        productList.appendChild(li);
+  socket.on('productListUpdated', (products) => {
+    productList.innerHTML = '';
+    products.forEach((p) => {
+      const col = document.createElement('div');
+      col.className = 'col';
+      col.innerHTML = `
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title text-primary fw-bold">${p.title}</h5>
+            <p class="card-text">${p.description}</p>
+            <p class="text-success fw-semibold">$ ${p.price}</p>
+            <p class="text-muted small">Stock: ${p.stock}</p>
+          </div>
+        </div>
+      `;
+      productList.appendChild(col);
     });
-    });
+  });
 </script>

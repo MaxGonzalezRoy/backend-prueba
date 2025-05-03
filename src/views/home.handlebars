@@ -1,42 +1,52 @@
-{{!-- views/home.handlebars --}}
-<h1 class="text-3xl font-bold mb-6">🛒 Productos disponibles</h1>
+<h1 class="text-center mb-5 text-primary fw-bold fs-2">🛒 Productos disponibles</h1>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-    {{#each products}}
-        <div class="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between">
-            <div>
-                <h2 class="text-xl font-semibold text-blue-600">{{title}}</h2>
-                <p class="text-gray-700 mt-1">{{description}}</p>
-                <p class="mt-2 text-green-600 font-bold">$ {{price}}</p>
-                <p class="text-sm text-gray-500">Stock: {{stock}}</p>
-            </div>
-            <button 
-                class="mt-4 bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded add-to-cart"
-                data-id="{{id}}">
-                Agregar al carrito
-            </button>
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+  {{#each products}}
+    <div class="col">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column justify-content-between">
+          <div>
+            <h5 class="card-title text-primary fw-bold">{{title}}</h5>
+            <p class="card-text">{{description}}</p>
+            <p class="text-success fw-bold mt-2">$ {{price}}</p>
+            <p class="text-muted small">Stock: {{stock}}</p>
+          </div>
+          <button 
+            class="btn btn-primary mt-3 add-to-cart"
+            data-id="{{id}}"
+          >
+            Agregar al carrito
+          </button>
         </div>
-    {{/each}}
+      </div>
+    </div>
+  {{/each}}
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const buttons = document.querySelectorAll('.add-to-cart');
-        buttons.forEach(button => {
-        button.addEventListener('click', async () => {
-            const productId = button.dataset.id;
-            try {
-            const res = await fetch(`/api/carts/1/product/${productId}`, { method: 'POST' });
-            const data = await res.json();
-            if (res.ok) {
-                Swal.fire('¡Producto agregado!', 'Se ha agregado al carrito correctamente.', 'success');
-            } else {
-                Swal.fire('Error', data.message || 'No se pudo agregar el producto.', 'error');
-            }
-            } catch (error) {
-            Swal.fire('Error', 'Error al comunicar con el servidor.', 'error');
-            }
-        });
-        });
+  document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('.add-to-cart');
+    buttons.forEach(button => {
+      button.addEventListener('click', async () => {
+        const productId = button.dataset.id;
+        try {
+          const res = await fetch(`/api/carts/1/product/${productId}`, { method: 'POST' });
+          const data = await res.json();
+          if (res.ok) {
+            Swal.fire({
+              title: '¡Producto agregado!',
+              text: 'Se ha agregado al carrito correctamente.',
+              icon: 'success',
+              timer: 1500,
+              showConfirmButton: false
+            });
+          } else {
+            Swal.fire('Error', data.message || 'No se pudo agregar el producto.', 'error');
+          }
+        } catch (error) {
+          Swal.fire('Error', 'Error al comunicar con el servidor.', 'error');
+        }
+      });
     });
+  });
 </script>
