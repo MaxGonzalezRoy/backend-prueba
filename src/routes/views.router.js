@@ -9,23 +9,38 @@ const cartManagerInstance = new CartManager();  // Renombrado la instancia para 
 // GET /home - Renderiza lista de productos (vista estática)
 router.get('/home', async (req, res) => {
     const products = await productManager.getAll();
-    res.render('home', { products });
+    res.render('home', { 
+        title: 'Inicio',
+        year: new Date().getFullYear(),
+        products 
+    });
 });
 
-// GET /realtimeproducts - Renderiza vista con WebSockets
-router.get('/realtimeproducts', async (req, res) => {
+// GET /products - Vista con WebSockets
+router.get('/products', async (req, res) => {
     const products = await productManager.getAll();
-    res.render('realtimeproducts', {
-        title: 'Productos en Tiempo Real',
+    res.render('products', {
+        title: 'Productos',
         year: new Date().getFullYear(),
         products
     });
 });
 
+// GET /cart - Carrito
 router.get('/cart', async (req, res) => {
     res.render('carts', {
         title: 'Tu carrito',
         year: new Date().getFullYear()
+    });
+});
+
+router.get('/realtimeproducts', async (req, res) => {
+    console.log('🛠 Entrando a /realtimeproducts');
+    const products = await productManager.getAll();
+    res.render('realTimeProducts', {
+        title: 'Productos en Tiempo Real',
+        year: new Date().getFullYear(),
+        products
     });
 });
 

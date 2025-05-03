@@ -11,5 +11,18 @@
     "thumbnails": [
       ""
     ]
+  },
+  {
+    "id": 2,
+    "status": true,
+    "title": "nacho",
+    "description": "faf",
+    "code": "FADFA",
+    "price": 12,
+    "stock": 23,
+    "category": "DDSFA",
+    "thumbnails": [
+      ""
+    ]
   }
 ]

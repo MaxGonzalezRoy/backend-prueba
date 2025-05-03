@@ -38,3 +38,12 @@ a {
     background-color: #0a58ca;
     border-color: #0a58ca;
   }
+
+  @font-face {
+    font-family: 'Roboto';
+    src: url('/fonts/Roboto-Regular.woff2') format('woff2');
+    font-weight: 400;
+  }
+  body {
+    font-family: 'Roboto', sans-serif;
+  }

@@ -2,7 +2,6 @@ import express from 'express';
 import exphbs from 'express-handlebars';
 import { createServer } from 'http';
 import { Server as SocketIO } from 'socket.io';
-import handlebars from 'express-handlebars';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -26,18 +25,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Motor de plantillas Handlebars
 app.engine('handlebars', exphbs.engine({
     defaultLayout: 'main',
-    layoutsDir: path.join(__dirname, 'src/views/layouts'), 
+    layoutsDir: path.join(__dirname, 'src/views/layouts'),
 }));
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'src/views'));
 
-// Configurar CSP para permitir fuentes externas (Google Fonts, etc.)
+// Configurar CSP para permitir fuentes externas (Google Fonts, CDN, etc.)
 app.use((req, res, next) => {
-    res.setHeader("Content-Security-Policy", 
-    "default-src 'self'; " +
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " +
-    "font-src 'self' https://fonts.gstatic.com; " +
-    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;");
+    res.setHeader("Content-Security-Policy",
+        "default-src 'self'; " +
+        "style-src 'self' https://fonts.googleapis.com https://cdn.jsdelivr.net; " +
+        "font-src https://fonts.gstatic.com; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;"
+    );
     next();
 });
 
