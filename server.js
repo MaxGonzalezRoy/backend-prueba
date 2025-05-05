@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import productsRouter from './src/routes/products.router.js';
 import cartsRouter from './src/routes/carts.router.js';
 import viewsRouter from './src/routes/views.router.js';
+import e from 'express';
 
 // Configuración de rutas absolutas para usar __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -20,7 +21,7 @@ const io = new SocketIO(httpServer);
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'src/public')));
+app.use(express.static(path.join(__dirname, 'src', 'public')));
 
 // Motor de plantillas Handlebars
 app.engine('handlebars', exphbs.engine({
@@ -35,11 +36,10 @@ app.use((req, res, next) => {
     res.setHeader("Content-Security-Policy",
         "default-src 'self'; " +
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
-        "font-src https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
-        "connect-src 'self'; " +
-        "img-src 'self' data:;"
-    );    
+        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
+        "img-src 'self' data:; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;"
+    );
     next();
 });
 
@@ -64,4 +64,13 @@ io.on('connection', socket => {
 const PORT = 8080;
 httpServer.listen(PORT, () => {
     console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
+});
+
+httpServer.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error('El puerto ${PORT} ya esta en uso.');
+        process.exit(1);
+    } else {
+        throw err;
+    }
 });

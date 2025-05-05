@@ -1,52 +1,61 @@
-import { Router } from 'express';
-import ProductManager from '../managers/productManager.js';
-import CartManager from '../managers/cartManager.js';
+import express, { Router } from 'express'; // ✅ Usamos esta sola vez
+import path from 'path';
+import { fileURLToPath } from 'url';
+import exphbs from 'express-handlebars';
+import { Server } from 'socket.io';
+import router from './products.router.js'; // no lo estás usando en este archivo aún
 
-const router = Router();
-const productManager = new ProductManager();
-const cartManagerInstance = new CartManager();  // Renombrado la instancia para evitar conflicto
+// --- Configuración para __dirname con ES Modules ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// GET /home - Renderiza lista de productos (vista estática)
-router.get('/home', async (req, res) => {
-    const products = await productManager.getAll();
-    res.render('home', { 
-        title: 'Inicio',
-        year: new Date().getFullYear(),
-        products 
-    });
+const viewsRouter = Router(); // usás Router() que ya importaste arriba
+
+const app = express();
+const PORT = 8080;
+
+// --- Rutas para vistas ---
+viewsRouter.get('/', (req, res) => {
+  res.render('home');
 });
 
-// GET /products - Vista con WebSockets
-router.get('/products', async (req, res) => {
-    const products = await productManager.getAll();
-    res.render('products', {
-        title: 'Productos',
-        year: new Date().getFullYear(),
-        products
-    });
+viewsRouter.get('/realtimeproducts', (req, res) => {
+  res.render('realTimeProducts');
 });
 
-// GET /cart - Carrito
-router.get('/cart', async (req, res) => {
-    res.render('carts', {
-        title: 'Tu carrito',
-        year: new Date().getFullYear()
-    });
+viewsRouter.get('/products', (req, res) => {
+  res.render('products');
 });
 
-router.get('/realtimeproducts', async (req, res) => {
-    console.log('🛠 Entrando a /realtimeproducts');
-    const products = await productManager.getAll();
-    res.render('realTimeProducts', {
-        title: 'Productos en Tiempo Real',
-        year: new Date().getFullYear(),
-        products
-    });
+viewsRouter.get('/carts', (req, res) => {
+  res.render('carts');
 });
 
-// Redirige raíz a /home
-router.get('/', (req, res) => {
-    res.redirect('/home');
+// --- Middlewares ---
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public'))); // Asegúrate que 'public' contiene tus CSS y assets
+
+// --- Motor de plantillas (Handlebars) ---
+app.engine('handlebars', exphbs.engine());
+app.set('view engine', 'handlebars');
+app.set('views', path.join(__dirname, 'views'));
+
+// --- Rutas ---
+app.use('/', viewsRouter);
+app.use('/api/products', router);
+
+// --- Servidor HTTP + WebSockets ---
+const httpServer = app.listen(PORT, () => {
+  console.log(`✅ Servidor escuchando en http://localhost:${PORT}`);
 });
 
-export default router;
+const io = new Server(httpServer);
+app.set('socketio', io);
+
+// WebSocket básico de ejemplo
+io.on('connection', socket => {
+  console.log('🔌 Cliente conectado vía WebSocket');
+});
+
+export default viewsRouter;
