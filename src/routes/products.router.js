@@ -2,13 +2,12 @@ import { Router } from 'express';
 import ProductManager from '../managers/productManager.js';
 const router = Router();
 
-// Cambiar el nombre de la instancia para evitar conflicto
-const productMgr = new ProductManager(); // Renombrada la instancia a `productMgr`
+const productMgr = new ProductManager(); // Evita conflicto de nombres
 
-// GET /api/products - Obtener todos los productos
+// GET /api/products
 router.get('/', async (req, res) => {
     try {
-        const products = await productMgr.getAll(); // Usar la nueva instancia
+        const products = await productMgr.getAll();
         res.json(products);
     } catch (error) {
         console.error('Error al obtener productos:', error);
@@ -16,16 +15,12 @@ router.get('/', async (req, res) => {
     }
 });
 
-// GET /api/products/:pid - Obtener un producto por ID
+// GET /api/products/:pid
 router.get('/:pid', async (req, res) => {
     try {
         const pid = req.params.pid;
-        const product = await productMgr.getById(pid); // Usar la nueva instancia
-
-        if (!product) {
-            return res.status(404).json({ error: 'Producto no encontrado' });
-        }
-
+        const product = await productMgr.getById(pid);
+        if (!product) return res.status(404).json({ error: 'Producto no encontrado' });
         res.json(product);
     } catch (error) {
         console.error('Error al obtener el producto:', error);
@@ -33,24 +28,22 @@ router.get('/:pid', async (req, res) => {
     }
 });
 
-// POST /api/products - Agregar un nuevo producto
+// POST /api/products
 router.post('/', async (req, res) => {
     try {
         const newProduct = req.body;
 
-        // Validación básica
         const requiredFields = ['title', 'description', 'code', 'price', 'stock', 'category'];
         const missingFields = requiredFields.filter(field => !newProduct[field]);
-
         if (missingFields.length > 0) {
             return res.status(400).json({ error: `Faltan los siguientes campos obligatorios: ${missingFields.join(', ')}` });
         }
 
-        const addedProduct = await productMgr.addProduct(newProduct); // Usar la nueva instancia
+        const addedProduct = await productMgr.addProduct(newProduct);
 
-        // Emitir actualización a todos los clientes
+        // 🔧 Obtener io desde la app (gracias a app.set())
         const io = req.app.get('socketio');
-        const updatedList = await productMgr.getAll(); // Usar la nueva instancia
+        const updatedList = await productMgr.getAll();
         io.emit('productListUpdated', updatedList);
 
         res.status(201).json({ message: 'Producto agregado', product: addedProduct });
@@ -60,22 +53,16 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PUT /api/products/:pid - Actualizar un producto por ID
+// PUT /api/products/:pid
 router.put('/:pid', async (req, res) => {
     try {
         const pid = req.params.pid;
         const updateData = req.body;
 
-        // No se puede modificar el ID
-        if (updateData.id) {
-            return res.status(400).json({ error: 'No se puede modificar el ID del producto' });
-        }
+        if (updateData.id) return res.status(400).json({ error: 'No se puede modificar el ID del producto' });
 
-        const updatedProduct = await productMgr.updateProduct(pid, updateData); // Usar la nueva instancia
-
-        if (!updatedProduct) {
-            return res.status(404).json({ error: 'Producto no encontrado' });
-        }
+        const updatedProduct = await productMgr.updateProduct(pid, updateData);
+        if (!updatedProduct) return res.status(404).json({ error: 'Producto no encontrado' });
 
         res.json({ message: 'Producto actualizado', product: updatedProduct });
     } catch (error) {
@@ -84,19 +71,16 @@ router.put('/:pid', async (req, res) => {
     }
 });
 
-// DELETE /api/products/:pid - Eliminar un producto por ID
+// DELETE /api/products/:pid
 router.delete('/:pid', async (req, res) => {
     try {
         const pid = req.params.pid;
-        const result = await productMgr.deleteProduct(pid); // Usar la nueva instancia
+        const result = await productMgr.deleteProduct(pid);
+        if (!result) return res.status(404).json({ error: 'Producto no encontrado' });
 
-        if (!result) {
-            return res.status(404).json({ error: 'Producto no encontrado' });
-        }
-
-        // Emitir actualización a todos los clientes
+        // 🔧 Emitir actualización
         const io = req.app.get('socketio');
-        const updatedList = await productMgr.getAll(); // Usar la nueva instancia
+        const updatedList = await productMgr.getAll();
         io.emit('productListUpdated', updatedList);
 
         res.json({ message: 'Producto eliminado correctamente' });

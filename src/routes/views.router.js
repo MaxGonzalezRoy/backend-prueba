@@ -61,10 +61,11 @@ viewsRouter.get('/carts/:cid', async (req, res) => {
     const totalPrice = enrichedProducts.reduce((total, item) => total + (item.price * item.quantity), 0);
 
     res.render('carts', {
+        layout: 'main',
         cart: {
             id: cart.id,
             products: enrichedProducts,
-            totalPrice: totalPrice.toFixed(2) // Formatear a dos decimales
+            totalPrice: totalPrice.toFixed(2)
         }
     });
 });

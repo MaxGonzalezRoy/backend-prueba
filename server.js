@@ -8,17 +8,23 @@ import { engine } from 'express-handlebars';
 import path from 'path';
 import cartsRouter from './src/routes/carts.router.js';
 import { fileURLToPath } from 'url';
+import productsRouter from './src/routes/products.router.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const app = express();
 const server = http.createServer(app);
 const io = new SocketServer(server);
+
+// 🔧 Compartir `io` con toda la app para usarlo en routers
+app.set('socketio', io);
+
 const PORT = process.env.PORT || 8080;
 
 // Instancias de los managers
 const productManager = new ProductManager();
-const cartManager = new CartManager(); // Aún no usado, pero listo
+const cartManager = new CartManager(); // Preparado para usar
 
 // Configuración de Handlebars
 app.engine('handlebars', engine());
@@ -31,8 +37,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'src/public')));
 
 // Rutas
+app.use('/api/products', productsRouter); // <-- ¡esta es la ruta clave!
 app.use('/api/carts', cartsRouter);
-app.use('/carts', cartsRouter); // si usás ambas rutas
+app.use('/carts', cartsRouter);
 app.use('/', viewsRouter);
 
 // WebSockets
@@ -56,7 +63,7 @@ io.on('connection', socket => {
   });
 });
 
-// Seguridad opcional (CSP)
+// Seguridad CSP opcional
 app.use((req, res, next) => {
   res.setHeader("Content-Security-Policy",
     "default-src 'self'; " +

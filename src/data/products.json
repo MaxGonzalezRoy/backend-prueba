@@ -63,5 +63,18 @@
     "thumbnails": [
       ""
     ]
+  },
+  {
+    "id": 6,
+    "status": true,
+    "title": "ssssssss",
+    "description": "ssssssssss",
+    "code": "sssssssss",
+    "price": 3,
+    "stock": 3,
+    "category": "sssssssssss",
+    "thumbnails": [
+      ""
+    ]
   }
 ]
