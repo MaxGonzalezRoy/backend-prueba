@@ -10,7 +10,7 @@ const productManager = new ProductManager();
 
 // INICIO
 viewsRouter.get('/', (req, res) => {
-    res.redirect('/home');
+    res.render('home');
 });
 
 // HOME

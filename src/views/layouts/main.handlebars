@@ -35,7 +35,20 @@
   <link rel="stylesheet" href="/css/styles.css" />
 
   <!-- Socket.IO -->
-  <script src="/socket.io/socket.io.js"></script>
+  <script>
+  const socket = io();
+
+  socket.on('connect', () => {
+    console.log('🟢 Conectado al servidor Socket.IO');
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔴 Desconectado del servidor Socket.IO');
+  });
+
+  // Otros eventos que necesites escuchar...
+</script>
+
 </head>
 
 <body class="bg-gray-100 text-gray-800 font-sans">

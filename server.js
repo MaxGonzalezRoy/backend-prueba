@@ -27,6 +27,7 @@ app.set('views', './src/views');
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'src/public')));
 app.use(express.static('src/public'));
 app.use(express.static(__dirname + '/src/public'));
 
@@ -52,6 +53,18 @@ io.on('connection', socket => {
     socket.on('disconnect', () => {
         console.log('🔴 Cliente desconectado');
     });
+});
+
+app.use((req, res, next) => {
+    res.setHeader("Content-Security-Policy",
+        "default-src 'self'; " +
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
+        "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
+        "img-src 'self' data:; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;"
+    );
+    next();
 });
 
 // Server ON
