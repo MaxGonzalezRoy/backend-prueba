@@ -1,61 +1,65 @@
-import express, { Router } from 'express'; // ✅ Usamos esta sola vez
-import path from 'path';
-import { fileURLToPath } from 'url';
-import exphbs from 'express-handlebars';
-import { Server } from 'socket.io';
-import router from './products.router.js'; // no lo estás usando en este archivo aún
+// ✅ views.router.js
+import { Router } from 'express';
+import CartManager from '../managers/cartManager.js';
+import ProductManager from '../managers/productManager.js';
 
-// --- Configuración para __dirname con ES Modules ---
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const viewsRouter = Router();
 
-const viewsRouter = Router(); // usás Router() que ya importaste arriba
+const cartManagerInstance = new CartManager();
+const productManager = new ProductManager();
 
-const app = express();
-const PORT = 8080;
-
-// --- Rutas para vistas ---
+// INICIO
 viewsRouter.get('/', (req, res) => {
-  res.render('home');
+    res.redirect('/home');
 });
 
-viewsRouter.get('/realtimeproducts', (req, res) => {
-  res.render('realTimeProducts');
+// HOME
+viewsRouter.get('/home', async (req, res) => {
+    const products = await productManager.getAll();
+    res.render('home', { products });
 });
 
-viewsRouter.get('/products', (req, res) => {
-  res.render('products');
+// PRODUCTOS
+viewsRouter.get('/products', async (req, res) => {
+    const products = await productManager.getAll();
+    res.render('products', { products });
 });
 
-viewsRouter.get('/carts', (req, res) => {
-  res.render('carts');
+// VISTA EN TIEMPO REAL
+viewsRouter.get('/realtimeproducts', async (req, res) => {
+    const products = await productManager.getAll();
+    res.render('realTimeProducts', { products });
 });
 
-// --- Middlewares ---
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); // Asegúrate que 'public' contiene tus CSS y assets
+// CARRITO
+viewsRouter.get('/carts/:cid', async (req, res) => {
+    const cid = parseInt(req.params.cid);
+    const cart = await cartManagerInstance.getCartById(cid);
 
-// --- Motor de plantillas (Handlebars) ---
-app.engine('handlebars', exphbs.engine());
-app.set('view engine', 'handlebars');
-app.set('views', path.join(__dirname, 'views'));
+    if (!cart) return res.render('error', { message: 'Carrito no encontrado' });
 
-// --- Rutas ---
-app.use('/', viewsRouter);
-app.use('/api/products', router);
+    const enrichedProducts = await Promise.all(
+        cart.products.map(async (item) => {
+            const product = await productManager.getById(item.product);
+            return {
+                id: item.product,
+                name: product?.title || 'Producto no disponible',
+                price: product?.price || 0,
+                quantity: item.quantity
+            };
+        })
+    );
 
-// --- Servidor HTTP + WebSockets ---
-const httpServer = app.listen(PORT, () => {
-  console.log(`✅ Servidor escuchando en http://localhost:${PORT}`);
-});
+    // Calcular el total del carrito
+    const totalPrice = enrichedProducts.reduce((total, item) => total + (item.price * item.quantity), 0);
 
-const io = new Server(httpServer);
-app.set('socketio', io);
-
-// WebSocket básico de ejemplo
-io.on('connection', socket => {
-  console.log('🔌 Cliente conectado vía WebSocket');
+    res.render('carts', {
+        cart: {
+            id: cart.id,
+            products: enrichedProducts,
+            totalPrice: totalPrice.toFixed(2) // Formatear a dos decimales
+        }
+    });
 });
 
 export default viewsRouter;

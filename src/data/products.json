@@ -50,5 +50,18 @@
     "thumbnails": [
       ""
     ]
+  },
+  {
+    "id": 5,
+    "status": true,
+    "title": "paredes",
+    "description": "jfasj",
+    "code": "fasf",
+    "price": 22,
+    "stock": 22,
+    "category": "sfasf",
+    "thumbnails": [
+      ""
+    ]
   }
 ]

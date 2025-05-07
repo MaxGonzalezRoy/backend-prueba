@@ -11,6 +11,7 @@ router.get('/', async (req, res) => {
         const products = await productMgr.getAll(); // Usar la nueva instancia
         res.json(products);
     } catch (error) {
+        console.error('Error al obtener productos:', error);
         res.status(500).json({ error: 'Error al obtener productos' });
     }
 });
@@ -27,6 +28,7 @@ router.get('/:pid', async (req, res) => {
 
         res.json(product);
     } catch (error) {
+        console.error('Error al obtener el producto:', error);
         res.status(500).json({ error: 'Error al obtener el producto' });
     }
 });
@@ -38,10 +40,10 @@ router.post('/', async (req, res) => {
 
         // Validación básica
         const requiredFields = ['title', 'description', 'code', 'price', 'stock', 'category'];
-        for (const field of requiredFields) {
-            if (!newProduct[field]) {
-                return res.status(400).json({ error: `Falta el campo obligatorio: ${field}` });
-            }
+        const missingFields = requiredFields.filter(field => !newProduct[field]);
+
+        if (missingFields.length > 0) {
+            return res.status(400).json({ error: `Faltan los siguientes campos obligatorios: ${missingFields.join(', ')}` });
         }
 
         const addedProduct = await productMgr.addProduct(newProduct); // Usar la nueva instancia
@@ -53,6 +55,7 @@ router.post('/', async (req, res) => {
 
         res.status(201).json({ message: 'Producto agregado', product: addedProduct });
     } catch (error) {
+        console.error('Error al agregar el producto:', error);
         res.status(500).json({ error: 'Error al agregar el producto' });
     }
 });
@@ -76,6 +79,7 @@ router.put('/:pid', async (req, res) => {
 
         res.json({ message: 'Producto actualizado', product: updatedProduct });
     } catch (error) {
+        console.error('Error al actualizar el producto:', error);
         res.status(500).json({ error: 'Error al actualizar el producto' });
     }
 });
@@ -97,6 +101,7 @@ router.delete('/:pid', async (req, res) => {
 
         res.json({ message: 'Producto eliminado correctamente' });
     } catch (error) {
+        console.error('Error al eliminar el producto:', error);
         res.status(500).json({ error: 'Error al eliminar el producto' });
     }
 });

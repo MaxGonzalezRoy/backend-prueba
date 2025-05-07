@@ -1,3 +1,4 @@
+// ✅ cartManager.js
 import { promises as fs } from 'fs';
 import path from 'path';
 
@@ -32,23 +33,35 @@ export default class CartManager {
 
     async getCartById(id) {
         const carts = await this._loadCarts();
-        return carts.find(c => c.id === id);
+        return carts.find(c => c.id === Number(id));
     }
 
     async addProductToCart(cartId, productId) {
         const carts = await this._loadCarts();
-        const cart = carts.find(c => c.id === cartId);
+        const cart = carts.find(c => c.id === Number(cartId));
         if (!cart) return null;
 
-        const productInCart = cart.products.find(p => p.product === productId);
+        const productInCart = cart.products.find(p => Number(p.product) === Number(productId));
         if (productInCart) {
             productInCart.quantity++;
         } else {
-            cart.products.push({ product: productId, quantity: 1 });
+            cart.products.push({ product: Number(productId), quantity: 1 });
         }
 
         await this._saveCarts(carts);
         return cart;
     }
-}
 
+    async removeProductFromCart(cartId, productId) {
+        const carts = await this._loadCarts();
+        const cart = carts.find(c => c.id === Number(cartId));
+        if (!cart) return null;
+
+        const productIndex = cart.products.findIndex(p => Number(p.product) === Number(productId));
+        if (productIndex === -1) return null;
+
+        cart.products.splice(productIndex, 1);
+        await this._saveCarts(carts);
+        return cart;
+    }
+}
