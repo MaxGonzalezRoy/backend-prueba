@@ -61,17 +61,16 @@ router.post('/:cid/product/:pid', async (req, res) => {
 
 // DELETE /api/carts/:cid/product/:pid - Eliminar un producto del carrito
 router.delete('/:cid/product/:pid', async (req, res) => {
-    const { cid, pid } = req.params;
+    const cartId = parseInt(req.params.cid);
+    const productId = parseInt(req.params.pid);
+
     try {
-        const updatedCart = await cartManagerInstance.removeProductFromCart(cid, pid);
+        const updatedCart = await cartManager.removeProductFromCart(cartId, productId);
+        if (!updatedCart) return res.status(404).json({ error: 'Carrito o producto no encontrado' });
 
-        if (!updatedCart) {
-            return res.status(404).json({ error: 'Producto no encontrado en el carrito' });
-        }
-
-        res.status(200).json(updatedCart);
+        res.json({ message: 'Producto eliminado del carrito', cart: updatedCart });
     } catch (error) {
-        res.status(500).json({ error: 'Error al eliminar el producto' });
+        res.status(500).json({ error: 'Error al eliminar el producto del carrito' });
     }
 });
 

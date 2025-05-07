@@ -24,7 +24,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 
-
   <!-- SweetAlert2 CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/sweetalert2@11.5.7/dist/sweetalert2.min.css"
@@ -35,24 +34,13 @@
   <link rel="stylesheet" href="/css/styles.css" />
 
   <!-- Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
   <script>
-  const socket = io();
-
-  socket.on('connect', () => {
-    console.log('🟢 Conectado al servidor Socket.IO');
-  });
-
-  socket.on('disconnect', () => {
-    console.log('🔴 Desconectado del servidor Socket.IO');
-  });
-
-  // Otros eventos que necesites escuchar...
-</script>
-
+    window.socket = window.socket || io();
+  </script>
 </head>
 
 <body class="bg-gray-100 text-gray-800 font-sans">
-
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
@@ -65,7 +53,7 @@
           <li class="nav-item"><a class="nav-link" href="/home">Inicio</a></li>
           <li class="nav-item"><a class="nav-link" href="/products">Productos</a></li>
           <li class="nav-item"><a class="nav-link" href="/realtimeproducts">Tiempo Real</a></li>
-          <li class="nav-item"><a class="nav-link" href="/cart">Carrito</a></li>
+          <li class="nav-item"><a class="nav-link" href="/carts/1">Carrito</a></li>
         </ul>
       </div>
     </div>

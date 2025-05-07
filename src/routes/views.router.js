@@ -31,6 +31,13 @@ viewsRouter.get('/realtimeproducts', async (req, res) => {
     res.render('realTimeProducts', { products });
 });
 
+// REDIRECCIÓN /cart ➡️ /carts/1 (carrito por defecto)
+viewsRouter.get('/cart', (req, res) => {
+    const defaultCartId = 1; // Podrías obtenerlo dinámicamente en el futuro
+    res.redirect(`/carts/${defaultCartId}`);
+});
+
+
 // CARRITO
 viewsRouter.get('/carts/:cid', async (req, res) => {
     const cid = parseInt(req.params.cid);
