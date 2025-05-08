@@ -18,7 +18,7 @@ router.post('/', async (req, res) => {
 
 // GET /api/carts/:cid - Obtener productos enriquecidos de un carrito
 router.get('/:cid', async (req, res) => {
-    const cid = parseInt(req.params.cid);
+    const cid = parseInt(req.params.cid); // Asegurándonos de que sea un número
     try {
         const cart = await cartManagerInstance.getCartById(cid);
 
@@ -61,11 +61,11 @@ router.post('/:cid/product/:pid', async (req, res) => {
 
 // DELETE /api/carts/:cid/product/:pid - Eliminar un producto del carrito
 router.delete('/:cid/product/:pid', async (req, res) => {
-    const cartId = parseInt(req.params.cid);
+    const cartId = parseInt(req.params.cid); // Usando parseInt para asegurar el tipo
     const productId = parseInt(req.params.pid);
 
     try {
-        const updatedCart = await cartManager.removeProductFromCart(cartId, productId);
+        const updatedCart = await cartManagerInstance.removeProductFromCart(cartId, productId); // Asegúrate de que esté bien escrito
         if (!updatedCart) return res.status(404).json({ error: 'Carrito o producto no encontrado' });
 
         res.json({ message: 'Producto eliminado del carrito', cart: updatedCart });

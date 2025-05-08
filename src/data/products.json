@@ -76,5 +76,31 @@
     "thumbnails": [
       ""
     ]
+  },
+  {
+    "id": 7,
+    "status": true,
+    "title": "mmmm",
+    "description": "mmmmmm",
+    "code": "mmmmmm",
+    "price": 33,
+    "stock": 333,
+    "category": "mmmmmm",
+    "thumbnails": [
+      ""
+    ]
+  },
+  {
+    "id": 8,
+    "status": true,
+    "title": "loololo",
+    "description": "lolol",
+    "code": "lol",
+    "price": 5,
+    "stock": 5,
+    "category": "lolol",
+    "thumbnails": [
+      ""
+    ]
   }
 ]
