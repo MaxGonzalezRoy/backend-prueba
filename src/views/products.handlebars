@@ -1,79 +1,27 @@
-<h1 class="text-center text-green-600 font-bold text-2xl mb-8">🟢 Productos en Tiempo Real</h1>
+<h1 class="text-3xl font-bold text-center my-6">Administrador de Productos</h1>
 
-<section class="mb-10">
-    <h2 class="text-xl font-semibold mb-4">➕ Agregar nuevo producto</h2>
-    <form id="productForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input class="border p-2 rounded" type="text" name="title" placeholder="Título" required />
-        <input class="border p-2 rounded" type="text" name="description" placeholder="Descripción" required />
-        <input class="border p-2 rounded" type="text" name="code" placeholder="Código" required />
-        <input class="border p-2 rounded" type="number" name="price" placeholder="Precio" required />
-        <input class="border p-2 rounded" type="number" name="stock" placeholder="Stock" required />
-        <input class="border p-2 rounded" type="text" name="category" placeholder="Categoría" required />
-        <input class="border p-2 rounded md:col-span-2" type="text" name="thumbnails" placeholder="Thumbnails (coma separadas)" />
-        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded md:col-span-2">Agregar Producto</button>
-    </form>
-</section>
+<form id="product-form" class="max-w-xl mx-auto p-4 bg-white shadow rounded mb-6">
+    <input type="text" name="title" placeholder="Título" required class="w-full mb-2 p-2 border rounded" />
+    <input type="text" name="description" placeholder="Descripción" required class="w-full mb-2 p-2 border rounded" />
+    <input type="text" name="category" placeholder="Categoría" required class="w-full mb-2 p-2 border rounded" />
+    <input type="number" name="price" placeholder="Precio" required class="w-full mb-2 p-2 border rounded" />
+    <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded">
+        Agregar Producto
+    </button>
+</form>
 
-<section>
-    <h2 class="text-xl font-semibold mb-4">📦 Lista de productos</h2>
-    <div id="productList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {{#each products}}
-            <div class="bg-white rounded shadow-md p-4">
-                <h3 class="text-blue-600 font-bold text-lg">{{title}}</h3>
-                <p>{{description}}</p>
-                <p class="text-green-600 font-semibold">$ {{price}}</p>
-                <p class="text-gray-500 text-sm">Stock: {{stock}}</p>
-            </div>
-        {{/each}}
-    </div>
-</section>
+<div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+    {{#each products}}
+        <div class="bg-white shadow-md rounded-lg p-4">
+        <h2 class="text-xl font-semibold">{{this.title}}</h2>
+        <p>Precio: ${{this.price}}</p>
+        <button 
+            onclick="deleteProduct('{{this.id}}')" 
+            class="bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded mt-2"
+        >Eliminar</button>
+        </div>
+    {{/each}}
+</div>
 
-<script>
-    const socket = window.socket;
-    const form = document.getElementById('productForm');
-    const productList = document.getElementById('productList');
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        const data = {};
-        formData.forEach((value, key) => {
-            if (key === 'thumbnails') {
-                data[key] = value.split(',').map(str => str.trim());
-            } else if (key === 'price' || key === 'stock') {
-                data[key] = parseFloat(value);
-            } else {
-                data[key] = value;
-            }
-    });
-
-    const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-
-    const result = await res.json();
-    if (res.ok) {
-        form.reset();
-        Swal.fire('¡Producto agregado!', '', 'success');
-    } else {
-        Swal.fire('Error', result.message || 'No se pudo agregar el producto.', 'error');
-    }
-    });
-
-socket.on('productListUpdated', (products) => {
-    productList.innerHTML = '';
-    products.forEach((p) => {
-        const col = document.createElement('div');
-        col.className = 'bg-white rounded shadow-md p-4';
-        col.innerHTML = `
-            <h3 class="text-blue-600 font-bold text-lg">${p.title}</h3>
-            <p>${p.description}</p>
-            <p class="text-green-600 font-semibold">$ ${p.price}</p>
-            <p class="text-gray-500 text-sm">Stock: ${p.stock}</p>
-        `;
-    productList.appendChild(col);
-    });
-});
-</script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/main.js"></script>

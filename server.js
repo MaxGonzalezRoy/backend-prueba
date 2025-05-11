@@ -17,32 +17,31 @@ const app = express();
 const server = http.createServer(app);
 const io = new SocketServer(server);
 
-// 🔧 Compartir `io` con toda la app para usarlo en routers
 app.set('socketio', io);
 
 const PORT = process.env.PORT || 8080;
 
-// Instancias de los managers
+// Managers
 const productManager = new ProductManager();
-const cartManager = new CartManager(); // Preparado para usar
+const cartManager = new CartManager();
 
-// Configuración de Handlebars
+// Handlebars
 app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'src/views'));
 
-// Middlewares
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Rutas
-app.use('/api/products', productsRouter); // <-- ¡esta es la ruta clave!
+app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/carts', cartsRouter);
 app.use('/', viewsRouter);
 
-// WebSockets
+// WebSocket
 io.on('connection', socket => {
   console.log('🟢 Cliente conectado');
 
@@ -63,7 +62,7 @@ io.on('connection', socket => {
   });
 });
 
-// Seguridad CSP opcional
+// CSP opcional
 app.use((req, res, next) => {
   res.setHeader("Content-Security-Policy",
     "default-src 'self'; " +
@@ -75,7 +74,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Server ON
 server.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en: http://localhost:${PORT}`);
 });
