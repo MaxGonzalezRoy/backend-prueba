@@ -4,6 +4,7 @@ import http from 'http';
 import viewsRouter from './src/routes/views.router.js';
 import ProductManager from './src/managers/productManager.js';
 import CartManager from './src/managers/cartManager.js';
+import realTimeProductsRouter from './src/routes/realTimeProducts.router.js';
 import { engine } from 'express-handlebars';
 import path from 'path';
 import cartsRouter from './src/routes/carts.router.js';
@@ -25,8 +26,12 @@ const PORT = process.env.PORT || 8080;
 const productManager = new ProductManager();
 const cartManager = new CartManager();
 
-// Handlebars
-app.engine('handlebars', engine());
+// Handlebars con layout
+app.engine('handlebars', engine({
+  defaultLayout: 'main',
+  layoutsDir: path.join(__dirname, 'src/views/layouts'),
+}));
+
 app.set('view engine', 'handlebars');
 app.set('views', path.join(__dirname, 'src/views'));
 
@@ -39,6 +44,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/carts', cartsRouter);
+app.use('/realtimeproducts', realTimeProductsRouter);
 app.use('/', viewsRouter);
 
 // WebSocket

@@ -1,17 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{{title}}</title>
-
-  <!-- ✅ Usar tu Tailwind compilado localmente -->
-  <link href="/styles/output.css" rel="stylesheet">
-
-  <!-- SweetAlert sigue igual -->
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/main.js" defer></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 text-gray-800">
-  {{{body}}}
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <!-- NAVBAR -->
+    <nav class="bg-blue-600 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-xl font-bold">Mi Tienda</a>
+                    <a href="/home" class="hover:text-gray-200">Inicio</a>
+                    <a href="/products" class="hover:text-gray-200">Productos</a>
+                    <a href="/realtimeproducts" class="hover:text-gray-200">En tiempo real</a>
+                    <a href="/cart" class="hover:text-gray-200">Carrito</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="container mx-auto px-4 py-6">
+        {{{body}}}
+    </main>
 </body>
 </html>
