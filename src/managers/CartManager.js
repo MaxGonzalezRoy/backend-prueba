@@ -1,66 +1,73 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-
-const cartsPath = path.resolve('src/data/carts.json');
+import Cart from '../models/Cart.js';
 
 export default class CartManager {
-    constructor() {
-        this.path = cartsPath;
-    }
-
-    async _loadCarts() {
-        try {
-            const data = await fs.readFile(this.path, 'utf-8');
-            return JSON.parse(data);
-        } catch (error) {
-            return [];
-        }
-    }
-
-    async _saveCarts(carts) {
-        await fs.writeFile(this.path, JSON.stringify(carts, null, 2));
-    }
-
     async createCart() {
-        const carts = await this._loadCarts();
-        const newId = carts.length ? carts[carts.length - 1].id + 1 : 1;
-        const newCart = { id: newId, products: [] };
-        carts.push(newCart);
-        await this._saveCarts(carts);
-        return newCart;
+        const newCart = new Cart({ products: [] });
+        return await newCart.save();
     }
 
-    async getCartById(id) {
-        const carts = await this._loadCarts();
-        return carts.find(c => c.id === Number(id));
+    async getCartById(cartId) {
+        return await Cart.findById(cartId).populate('products.product');
     }
 
-    async addProductToCart(cartId, productId) {
-        const carts = await this._loadCarts();
-        const cart = carts.find(c => c.id === Number(cartId));
-        if (!cart) return null;
+    // Corrección de la definición del método addToCart
+    async addToCart(productId) {
+        // Obtener el cartId desde localStorage
+        const cartId = localStorage.getItem('cartId');
 
-        const productInCart = cart.products.find(p => Number(p.product) === Number(productId));
-        if (productInCart) {
-            productInCart.quantity++;
-        } else {
-            cart.products.push({ product: Number(productId), quantity: 1 });
+        if (!cartId) {
+            Swal.fire('Error', 'No tienes un carrito activo.', 'error');
+            return;
         }
 
-        await this._saveCarts(carts);
-        return cart;
+        try {
+            const res = await fetch(`/api/carts/${cartId}/product/${productId}`, { method: 'POST' });
+
+            if (res.ok) {
+                Swal.fire({
+                    title: 'Agregado',
+                    text: 'Producto agregado al carrito.',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire('Error', 'No se pudo agregar el producto.', 'error');
+            }
+        } catch (err) {
+            console.error('Error al agregar al carrito:', err);
+            Swal.fire('Error', 'Error inesperado al agregar al carrito.', 'error');
+        }
     }
 
-    async removeProductFromCart(cartId, productId) {
-        const carts = await this._loadCarts();
-        const cart = carts.find(c => c.id === Number(cartId));
+    async updateProductQuantity(cartId, productId, quantity) {
+        const cart = await Cart.findById(cartId);
         if (!cart) return null;
 
-        const productIndex = cart.products.findIndex(p => Number(p.product) === Number(productId));
+        const productIndex = cart.products.findIndex(p => p.product.toString() === productId);
         if (productIndex === -1) return null;
 
-        cart.products.splice(productIndex, 1);
-        await this._saveCarts(carts);
-        return cart;
+        cart.products[productIndex].quantity = quantity;
+        return await cart.save();
+    }
+
+    async removeProduct(cartId, productId) {
+        const cart = await Cart.findById(cartId);
+        if (!cart) return null;
+
+        cart.products = cart.products.filter(p => p.product.toString() !== productId);
+        return await cart.save();
+    }
+
+    async emptyCart(cartId) {
+        const cart = await Cart.findById(cartId);
+        if (!cart) return null;
+
+        cart.products = [];
+        return await cart.save();
+    }
+
+    async getAllCarts() {
+        return await Cart.find().populate('products.product');
     }
 }

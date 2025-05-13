@@ -1,27 +1,10 @@
-<h1 class="text-3xl font-bold text-center my-6">Administrador de Productos</h1>
-
-<form id="product-form" class="max-w-xl mx-auto p-4 bg-white shadow rounded mb-6">
-    <input type="text" name="title" placeholder="Título" required class="w-full mb-2 p-2 border rounded" />
-    <input type="text" name="description" placeholder="Descripción" required class="w-full mb-2 p-2 border rounded" />
-    <input type="text" name="category" placeholder="Categoría" required class="w-full mb-2 p-2 border rounded" />
-    <input type="number" name="price" placeholder="Precio" required class="w-full mb-2 p-2 border rounded" />
-    <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded">
-        Agregar Producto
-    </button>
-</form>
-
-<div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-    {{#each products}}
-        <div class="bg-white shadow-md rounded-lg p-4">
-            <h2 class="text-xl font-semibold">{{this.title}}</h2>
-            <p>Precio: ${{this.price}}</p>
-            <button 
-                onclick="deleteProduct('{{this.id}}')" 
-                class="bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded mt-2"
-            >Eliminar</button>
-        </div>
-    {{/each}}
-</div>
-
-<script src="/socket.io/socket.io.js"></script>
-<script src="/js/main.js"></script>
+{{#each products}}
+    <div class="bg-white shadow-md rounded-lg p-4">
+        <h2 class="text-xl font-semibold">{{this.title}}</h2>
+        <p>Precio: ${{this.price}}</p>
+        <button 
+            data-id="{{this.id}}" 
+            class="delete-btn bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded mt-2"
+        >Eliminar</button>
+    </div>
+{{/each}}

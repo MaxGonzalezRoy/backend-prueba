@@ -1,34 +1,24 @@
-<h1 class="text-4xl font-bold text-center mt-10">Bienvenido a la Tienda</h1>
-<p class="text-center text-gray-600 mt-2">Navega por los productos o administra tu carrito.</p>
+<h1 class="text-3xl font-bold text-center my-6">Administrador de Productos</h1>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-  {{#each products}}
-    <div class="bg-white shadow-md rounded-lg p-4">
-      <h2 class="text-xl font-semibold mb-2">{{this.title}}</h2>
-      <p class="mb-1">Precio: ${{this.price}}</p>
-      <p class="mb-1">Descripción: {{this.description}}</p>
-      <p class="mb-1">Categoría: {{this.category}}</p>
-      <button 
-        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded mt-2"
-        onclick="addToCart('{{this.id}}')"
-      >Agregar al carrito</button>
-    </div>
-  {{/each}}
+<!-- Formulario para agregar productos -->
+<form id="product-form" class="space-y-4 max-w-lg mx-auto">
+    <input type="text" name="title" placeholder="Título" class="w-full p-2 border rounded" required>
+    <input type="text" name="description" placeholder="Descripción" class="w-full p-2 border rounded" required>
+    <input type="text" name="category" placeholder="Categoría" class="w-full p-2 border rounded" required>
+    <input type="number" name="price" placeholder="Precio" class="w-full p-2 border rounded" required>
+    <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-700">Agregar Producto</button>
+</form>
+
+<!-- Lista de productos -->
+<div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 mt-6">
+    {{#each products}}
+        <div class="bg-white shadow-md rounded-lg p-4">
+            <h2 class="text-xl font-semibold">{{this.title}}</h2>
+            <p>Precio: ${{this.price}}</p>
+            <button 
+                onclick="deleteProduct('{{this.id}}')" 
+                class="bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded mt-2"
+            >Eliminar</button>
+        </div>
+    {{/each}}
 </div>
-
-<script>
-  async function addToCart(productId) {
-    const res = await fetch(`/api/carts/1/product/${productId}`, { method: 'POST' });
-    if (res.ok) {
-      Swal.fire({
-        title: 'Agregado',
-        text: 'Producto agregado al carrito.',
-        icon: 'success',
-        timer: 1500,
-        showConfirmButton: false
-      });
-    } else {
-      Swal.fire('Error', 'No se pudo agregar el producto.', 'error');
-    }
-  }
-</script>

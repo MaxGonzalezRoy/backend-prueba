@@ -18,6 +18,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new SocketServer(server);
 
+// Inyección de socket en app para usarlo en routers
 app.set('socketio', io);
 
 const PORT = process.env.PORT || 8080;
@@ -51,6 +52,7 @@ app.use('/', viewsRouter);
 io.on('connection', socket => {
   console.log('🟢 Cliente conectado');
 
+  // Productos
   socket.on('new-product', async (newProduct) => {
     await productManager.addProduct(newProduct);
     const updatedProducts = await productManager.getAll();
@@ -63,21 +65,40 @@ io.on('connection', socket => {
     io.emit('update-products', updatedProducts);
   });
 
+  // Carritos
+  socket.on('cart-modified', async (cartId) => {
+    const updatedCart = await cartManager.getCartById(cartId);
+    io.emit('cartUpdated', updatedCart);
+  });
+
+  socket.on('cart-created', async () => {
+    const allCarts = await cartManager.getAllCarts(); // Este método debe existir
+    io.emit('cartListUpdated', allCarts);
+  });
+
   socket.on('disconnect', () => {
     console.log('🔴 Cliente desconectado');
   });
 });
 
-// CSP opcional
-app.use((req, res, next) => {
-  res.setHeader("Content-Security-Policy",
-    "default-src 'self'; " +
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " +
-    "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; " +
-    "img-src 'self' data:; " +
-    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;"
-  );
-  next();
+// Vista de productos
+app.get('/products', async (req, res) => {
+  const { limit = 10, page = 1, sort = '', query = '' } = req.query;
+  const products = await productManager.getAll({ limit, page, sort, query });
+  res.render('products', {
+    products,
+    prevLink: getPrevPageLink(page),
+    nextLink: getNextPageLink(page),
+  });
+});
+
+// Vista de un carrito
+app.get('/carts/:cid', async (req, res) => {
+  const cartId = req.params.cid;
+  const cart = await cartManager.getCartById(cartId);
+  res.render('cart', {
+    cart,
+  });
 });
 
 server.listen(PORT, () => {

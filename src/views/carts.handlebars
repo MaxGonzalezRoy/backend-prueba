@@ -61,4 +61,7 @@
       }
     }
   }
+
+  // NO redeclarar socket si ya está en main.js
+  socket.on('cartUpdated', () => location.reload());
 </script>

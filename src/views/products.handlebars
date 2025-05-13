@@ -10,9 +10,20 @@
             <button 
                 class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded mt-2"
                 onclick="addToCart('{{this.id}}')"
-        >Agregar al carrito</button>
+            >
+                Agregar al carrito
+            </button>
         </div>
     {{/each}}
+</div>
+
+<div class="flex justify-between mt-6">
+    {{#if prevLink}}
+        <a href="{{prevLink}}" class="bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded">Anterior</a>
+    {{/if}}
+    {{#if nextLink}}
+        <a href="{{nextLink}}" class="bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded">Siguiente</a>
+    {{/if}}
 </div>
 
 <script>
