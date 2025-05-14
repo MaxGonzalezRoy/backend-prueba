@@ -10,35 +10,20 @@ export default class CartManager {
         return await Cart.findById(cartId).populate('products.product');
     }
 
-    // Corrección de la definición del método addToCart
-    async addToCart(productId) {
-        // Obtener el cartId desde localStorage
-        const cartId = localStorage.getItem('cartId');
+    // ✅ Método correcto para agregar un producto al carrito (BACKEND)
+    async addProductToCart(cartId, productId) {
+    const cart = await Cart.findById(cartId);
+    if (!cart) return null;
 
-        if (!cartId) {
-            Swal.fire('Error', 'No tienes un carrito activo.', 'error');
-            return;
-        }
-
-        try {
-            const res = await fetch(`/api/carts/${cartId}/product/${productId}`, { method: 'POST' });
-
-            if (res.ok) {
-                Swal.fire({
-                    title: 'Agregado',
-                    text: 'Producto agregado al carrito.',
-                    icon: 'success',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            } else {
-                Swal.fire('Error', 'No se pudo agregar el producto.', 'error');
-            }
-        } catch (err) {
-            console.error('Error al agregar al carrito:', err);
-            Swal.fire('Error', 'Error inesperado al agregar al carrito.', 'error');
-        }
+    const index = cart.products.findIndex(p => p.product.toString() === productId);
+    if (index >= 0) {
+        cart.products[index].quantity += 1;
+    } else {
+        cart.products.push({ product: productId, quantity: 1 });
     }
+
+    return await cart.save();
+}
 
     async updateProductQuantity(cartId, productId, quantity) {
         const cart = await Cart.findById(cartId);

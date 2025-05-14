@@ -1,4 +1,3 @@
-// ✅ views.router.js
 import { Router } from 'express';
 import CartManager from '../managers/cartManager.js';
 import ProductManager from '../managers/productManager.js';
@@ -24,12 +23,6 @@ viewsRouter.get('/products', async (req, res) => {
     const products = await productManager.getAll();
     res.render('products', { products });
 });
-
-// VISTA EN TIEMPO REAL
-// viewsRouter.get('/realtimeproducts', async (req, res) => {
-//     const products = await productManager.getAll();
-//     res.render('realTimeProducts', { products });
-// });
 
 // REDIRECCIÓN /cart ➡️ /carts/1 (carrito por defecto)
 viewsRouter.get('/cart', (req, res) => {

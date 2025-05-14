@@ -1,34 +1,22 @@
-<h1 class="text-3xl font-bold text-center my-6">Lista de Productos</h1>
-
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-    {{#each products}}
-        <div class="bg-white shadow-md rounded-lg p-4">
-            <h2 class="text-xl font-semibold mb-2">{{this.title}}</h2>
-            <p class="mb-1">Precio: ${{this.price}}</p>
-            <p class="mb-1">Descripción: {{this.description}}</p>
-            <p class="mb-1">Categoría: {{this.category}}</p>
-            <button 
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-4 rounded mt-2"
-                onclick="addToCart('{{this.id}}')"
-            >
-                Agregar al carrito
-            </button>
-        </div>
-    {{/each}}
-</div>
-
-<div class="flex justify-between mt-6">
-    {{#if prevLink}}
-        <a href="{{prevLink}}" class="bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded">Anterior</a>
-    {{/if}}
-    {{#if nextLink}}
-        <a href="{{nextLink}}" class="bg-blue-500 hover:bg-blue-700 text-white py-1 px-4 rounded">Siguiente</a>
-    {{/if}}
-</div>
-
 <script>
+    async function ensureCart() {
+        let cartId = localStorage.getItem('cartId');
+        if (!cartId) {
+            const res = await fetch('/api/carts', { method: 'POST' });
+            const data = await res.json();
+            cartId = data.cart._id;
+            localStorage.setItem('cartId', cartId);
+        }
+        return cartId;
+    }
+
     async function addToCart(productId) {
-        const res = await fetch(`/api/carts/1/product/${productId}`, { method: 'POST' });
+        const cartId = await ensureCart();
+
+        const res = await fetch(`/api/carts/${cartId}/product/${productId}`, {
+            method: 'POST'
+        });
+
         if (res.ok) {
             Swal.fire({
                 title: 'Agregado',
