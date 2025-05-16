@@ -1,34 +1,66 @@
 <h1 class="text-3xl font-bold text-center my-6">🛒 Tu Carrito</h1>
 
-{{#if cart.products.length}}
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
-  {{#each cart.products}}
-    <div class="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between">
-      <div>
-        <h2 class="text-lg font-semibold text-blue-600 mb-2">Producto: {{this.name}}</h2>
-        <p class="mb-1">Cantidad: <strong>{{this.quantity}}</strong></p>
-        <small class="text-gray-500">ID: {{this.id}}</small>
-      </div>
-      <button 
-        class="mt-4 bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded"
-        onclick="removeFromCart('{{../cart.id}}', '{{this.id}}')"
-      >
-        Eliminar
-      </button>
-    </div>
-  {{/each}}
+<div id="cart-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
+  <!-- Productos se insertan aquí dinámicamente -->
 </div>
 
 <div class="text-center mt-6">
-  <h3 class="text-xl font-bold">Total: ${{cart.totalPrice}}</h3>
+  <button 
+    id="empty-cart-btn" 
+    class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 hidden"
+  >
+    Vaciar carrito
+  </button>
 </div>
-{{else}}
-  <div class="text-center mt-10 text-gray-600">
-    <p class="text-lg">El carrito está vacío. ¡Agrega productos!</p>
-  </div>
-{{/if}}
 
 <script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const container = document.getElementById('cart-container');
+    const emptyBtn = document.getElementById('empty-cart-btn');
+    const cartId = localStorage.getItem('cartId');
+
+    if (!cartId) {
+      container.innerHTML = '<p class="text-center text-gray-600">No tienes un carrito activo.</p>';
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/carts/${cartId}`);
+      const data = await res.json();
+      console.log("📦 Respuesta al crear carrito:", data);
+
+      if (!data.cart || data.cart.products.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-600">El carrito está vacío.</p>';
+        return;
+      }
+
+      emptyBtn.classList.remove('hidden'); // Mostrar botón de vaciar
+
+      data.cart.products.forEach(item => {
+        const prod = item.product;
+        container.innerHTML += `
+          <div class="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-blue-600 mb-2">Producto: ${prod.title}</h2>
+              <p class="mb-1">Cantidad: <strong>${item.quantity}</strong></p>
+              <p class="mb-1">Precio: $${prod.price}</p>
+              <small class="text-gray-500">ID: ${prod._id}</small>
+            </div>
+            <button 
+              class="mt-4 bg-red-500 hover:bg-red-700 text-white py-1 px-3 rounded"
+              onclick="removeFromCart('${cartId}', '${prod._id}')"
+            >
+              Eliminar
+            </button>
+          </div>
+        `;
+      });
+    } catch (err) {
+      console.error('Error al cargar el carrito:', err);
+      container.innerHTML = '<p class="text-center text-red-500">Error al cargar el carrito.</p>';
+    }
+  });
+
   async function removeFromCart(cartId, productId) {
     const confirm = await Swal.fire({
       title: '¿Estás seguro?',
@@ -47,21 +79,41 @@
       });
 
       if (res.ok) {
-        Swal.fire({
-          title: 'Eliminado',
-          text: 'Producto eliminado del carrito.',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false
-        }).then(() => {
-          location.reload();
-        });
+        Swal.fire('Eliminado', 'Producto eliminado del carrito.', 'success');
+        setTimeout(() => location.reload(), 1000);
       } else {
         Swal.fire('Error', 'No se pudo eliminar el producto.', 'error');
       }
     }
   }
 
-  // NO redeclarar socket si ya está en main.js
-  socket.on('cartUpdated', () => location.reload());
+  document.getElementById('empty-cart-btn').addEventListener('click', async () => {
+    const cartId = localStorage.getItem('cartId');
+    if (!cartId) return;
+
+    const confirm = await Swal.fire({
+      title: '¿Vaciar carrito?',
+      text: 'Esta acción eliminará todos los productos.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, vaciar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (confirm.isConfirmed) {
+      const res = await fetch(`/api/carts/${cartId}`, { method: 'DELETE' });
+
+      if (res.ok) {
+        Swal.fire('Carrito vacío', '', 'success');
+        location.reload();
+      } else {
+        Swal.fire('Error', 'No se pudo vaciar el carrito.', 'error');
+      }
+    }
+  });
+
+  // Solo si ya tenés socket declarado globalmente
+  if (typeof socket !== 'undefined') {
+    socket.on('cartUpdated', () => location.reload());
+  }
 </script>

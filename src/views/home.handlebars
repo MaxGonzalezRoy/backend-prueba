@@ -1,6 +1,7 @@
 <h1 class="text-3xl font-bold text-center my-6">Administrador de Productos</h1>
 
-<!-- Formulario para agregar productos -->
+<script>console.log("✅ home.handlebars cargado");</script>
+
 <form id="product-form" class="space-y-4 max-w-lg mx-auto">
     <input type="text" name="title" placeholder="Título" class="w-full p-2 border rounded" required>
     <input type="text" name="description" placeholder="Descripción" class="w-full p-2 border rounded" required>
@@ -9,16 +10,15 @@
     <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-700">Agregar Producto</button>
 </form>
 
+<!-- Filtro por categoría -->
+<select id="category-filter" class="border p-2 rounded max-w-lg mx-auto block my-6">
+    <option value="all">Todas</option>
+    {{#each categories}}
+        <option value="{{this}}">{{this}}</option>
+    {{/each}}
+</select>
+
 <!-- Lista de productos -->
 <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 mt-6">
-    {{#each products}}
-        <div class="bg-white shadow-md rounded-lg p-4">
-            <h2 class="text-xl font-semibold">{{this.title}}</h2>
-            <p>Precio: ${{this.price}}</p>
-            <button 
-                onclick="deleteProduct('{{this.id}}')" 
-                class="bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded mt-2"
-            >Eliminar</button>
-        </div>
-    {{/each}}
+    {{!-- Productos se re-renderizan desde JS, por eso dejamos el contenedor vacío --}}
 </div>

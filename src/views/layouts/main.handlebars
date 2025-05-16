@@ -7,9 +7,13 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/main.js" defer></script>
+    {{#if showProductsScript}}
+        <script src="/js/main.js" defer></script>
+    {{/if}}
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <script>console.log("✅ main.handlebars cargado");</script>
+
     <!-- NAVBAR -->
     <nav class="bg-blue-600 text-white shadow-md">
         <div class="max-w-7xl mx-auto px-4">
@@ -18,7 +22,6 @@
                     <a href="/" class="text-xl font-bold">Mi Tienda</a>
                     <a href="/home" class="hover:text-gray-200">Inicio</a>
                     <a href="/products" class="hover:text-gray-200">Productos</a>
-                    <a href="/realtimeproducts" class="hover:text-gray-200">En tiempo real</a>
                     <a href="/cart" class="hover:text-gray-200">Carrito</a>
                 </div>
             </div>

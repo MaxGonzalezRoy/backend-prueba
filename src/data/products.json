@@ -1,138 +1,20 @@
 [
-  {
+{
     "id": 1,
-    "status": true,
-    "title": "gagag",
-    "description": "gaga",
-    "code": "gag",
-    "price": 12,
-    "stock": 212,
-    "category": "agasg",
-    "thumbnails": [
-      ""
-    ]
-  },
-  {
+    "title": "Teclado Mecánico",
+    "description": "Teclado Mecánico RGB",
+    "price": 5000,
+    "code": "TK-001",
+    "stock": 10,
+    "category": "perifericos"
+},
+{
     "id": 2,
-    "status": true,
-    "title": "nacho",
-    "description": "faf",
-    "code": "FADFA",
-    "price": 12,
-    "stock": 23,
-    "category": "DDSFA",
-    "thumbnails": [
-      ""
-    ]
-  },
-  {
-    "id": 3,
-    "status": true,
-    "title": "mghmghm",
-    "description": "fghmgmfghm",
-    "code": "mgfhmg",
-    "price": 4555,
-    "stock": 555,
-    "category": "mfgm",
-    "thumbnails": [
-      ""
-    ]
-  },
-  {
-    "id": 4,
-    "status": true,
-    "title": "roy",
-    "description": "fsf",
-    "code": "gag",
-    "price": 323,
-    "stock": 323,
-    "category": "kjgj",
-    "thumbnails": [
-      ""
-    ]
-  },
-  {
-    "id": 5,
-    "status": true,
-    "title": "paredes",
-    "description": "jfasj",
-    "code": "fasf",
-    "price": 22,
-    "stock": 22,
-    "category": "sfasf",
-    "thumbnails": [
-      ""
-    ]
-  },
-  {
-    "id": 6,
-    "status": true,
-    "title": "ssssssss",
-    "description": "ssssssssss",
-    "code": "sssssssss",
-    "price": 3,
-    "stock": 3,
-    "category": "sssssssssss",
-    "thumbnails": [
-      ""
-    ]
-  },
-  {
-    "id": 7,
-    "status": true,
-    "title": "mmmm",
-    "description": "mmmmmm",
-    "code": "mmmmmm",
-    "price": 33,
-    "stock": 333,
-    "category": "mmmmmm",
-    "thumbnails": [
-      ""
-    ]
-  },
-  {
-    "id": 8,
-    "status": true,
-    "title": "loololo",
-    "description": "lolol",
-    "code": "lol",
-    "price": 5,
-    "stock": 5,
-    "category": "lolol",
-    "thumbnails": [
-      ""
-    ]
-  },
-  {
-    "id": 9,
-    "status": true,
-    "title": "yyyyyy",
-    "description": "yyyyyyyy",
-    "category": "yyyy",
-    "price": 1
-  },
-  {
-    "id": 10,
-    "status": true,
-    "title": "lololol",
-    "description": "lololol",
-    "category": "lololo",
-    "price": 777
-  },
-  {
-    "id": 11,
-    "status": true,
-    "title": "acc",
-    "description": "acc",
-    "category": "acc",
-    "price": 23
-  },
-  {
-    "id": 12,
-    "status": true,
-    "title": "aeropuerto",
-    "description": "aeropuerto",
-    "category": "aeropuerto",
-    "price": 555
-  }
+    "title": "Mouse gamer",
+    "description": "RGB con 7 botones",
+    "price": 3500,
+    "code": "MS-007",
+    "stock": 15,
+    "category": "perifericos"
+}
 ]

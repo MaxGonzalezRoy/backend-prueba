@@ -1,19 +1,107 @@
+<!-- 🛍️ TÍTULO -->
+<h1 class="text-3xl font-bold text-center my-6">🛍️ Productos Disponibles</h1>
+
+<!-- 🔎 FILTROS Y ORDENAMIENTO -->
+<form id="filterForm" class="flex flex-wrap justify-center gap-4 mb-6 px-4">
+    <select name="category" class="border rounded p-2">
+        <option value="" {{#unless query.category}}selected{{/unless}}>Todas las categorías</option>
+        <option value="tecnologia" {{#if (eq query.category "tecnologia")}}selected{{/if}}>Tecnología</option>
+        <option value="hogar" {{#if (eq query.category "hogar")}}selected{{/if}}>Hogar</option>
+        <option value="moda" {{#if (eq query.category "moda")}}selected{{/if}}>Moda</option>
+    </select>
+
+    <select name="sort" class="border rounded p-2">
+        <option value="" {{#unless query.sort}}selected{{/unless}}>Sin orden</option>
+        <option value="asc" {{#if (eq query.sort "asc")}}selected{{/if}}>Precio ascendente</option>
+        <option value="desc" {{#if (eq query.sort "desc")}}selected{{/if}}>Precio descendente</option>
+    </select>
+
+    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded">
+        Aplicar filtros
+    </button>
+</form>
+
+<!-- 🧱 GRILLA DE PRODUCTOS -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+    {{#each products.docs}}
+        <div class="bg-white shadow-md rounded-lg p-4 flex flex-col justify-between">
+            <div>
+                <h2 class="text-xl font-semibold text-blue-600">{{this.title}}</h2>
+                <p class="text-gray-600 mb-1">Categoría: <strong>{{this.category}}</strong></p>
+                <p class="text-gray-800 mb-1">Precio: ${{this.price}}</p>
+                <small class="text-gray-400">ID: {{this._id}}</small>
+            </div>
+            <button 
+                onclick="addToCart('{{this._id}}')" 
+                class="mt-4 bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded"
+            >
+                Agregar al carrito
+            </button>
+        </div>
+    {{/each}}
+</div>
+
+<!-- 📄 PAGINACIÓN -->
+<div class="flex justify-center gap-2 my-6">
+    {{#if products.hasPrevPage}}
+        <a href="?page={{products.prevPage}}{{#if queryString}}&{{queryString}}{{/if}}" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded">
+            ⬅️ Anterior
+        </a>
+    {{/if}}
+
+    <span class="px-4 py-2 bg-blue-100 text-blue-800 font-semibold rounded">
+        Página {{products.page}} de {{products.totalPages}}
+    </span>
+
+    {{#if products.hasNextPage}}
+        <a href="?page={{products.nextPage}}{{#if queryString}}&{{queryString}}{{/if}}" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded">
+            Siguiente ➡️
+        </a>
+    {{/if}}
+</div>
+
+<!-- 🧠 SCRIPTS -->
 <script>
-    async function ensureCart() {
+    // Filtrado dinámico
+    const form = document.getElementById('filterForm');
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        const params = new URLSearchParams();
+        const category = form.category.value;
+        const sort = form.sort.value;
+
+        if (category) params.append('category', category);
+        if (sort) params.append('sort', sort);
+
+        window.location.href = `?${params.toString()}`;
+    });
+
+    // Manejo de carrito
+    async function getOrCreateCartId() {
         let cartId = localStorage.getItem('cartId');
+
         if (!cartId) {
-            const res = await fetch('/api/carts', { method: 'POST' });
-            const data = await res.json();
-            cartId = data.cart._id;
-            localStorage.setItem('cartId', cartId);
+            try {
+                const res = await fetch('/api/carts', { method: 'POST' });
+                const data = await res.json();
+                console.log("🧪 Respuesta al crear carrito:", data);
+                cartId = data.cart.id;
+                localStorage.setItem('cartId', cartId);
+            } catch (err) {
+                console.error('❌ Error creando el carrito:', err);
+                Swal.fire('Error', 'No se pudo crear un carrito.', 'error');
+                return null;
+            }
         }
+
         return cartId;
     }
 
     async function addToCart(productId) {
-        const cartId = await ensureCart();
+        const cartId = await getOrCreateCartId();
+        if (!cartId) return;
 
-        const res = await fetch(`/api/carts/${cartId}/product/${productId}`, {
+        const res = await fetch(`/api/carts/${cartId}/products/${productId}`, {
             method: 'POST'
         });
 

@@ -1,11 +1,7 @@
 import { Router } from 'express';
-import CartManager from '../managers/cartManager.js';
-import ProductManager from '../managers/productManager.js';
+import { productDao, cartDao } from '../dao/index.js';
 
 const viewsRouter = Router();
-
-const cartManagerInstance = new CartManager();
-const productManager = new ProductManager();
 
 // INICIO
 viewsRouter.get('/', (req, res) => {
@@ -14,53 +10,95 @@ viewsRouter.get('/', (req, res) => {
 
 // HOME
 viewsRouter.get('/home', async (req, res) => {
-    const products = await productManager.getAll();
+    const products = await productDao.getProducts(); // CORRECTO: productDao (sin s)
     res.render('home', { products });
 });
 
-// PRODUCTOS
+// PRODUCTOS CON PAGINACIÓN Y FILTROS
 viewsRouter.get('/products', async (req, res) => {
-    const products = await productManager.getAll();
-    res.render('products', { products });
+    try {
+        const query = req.query;
+        const { page = 1, limit = 10, category, sort } = query;
+
+        const filters = {};
+        if (category) filters.category = category;
+
+        const sortOptions = (sort === 'asc' || sort === 'desc') ? { price: sort } : {};
+
+        // CORREGIDO: productDao en lugar de productsDao
+        const products = await productDao.getProductsPaginated(filters, {
+            page,
+            limit,
+            sort: sortOptions,
+            lean: true
+        });
+
+        products.queryString = new URLSearchParams({
+            ...(category && { category }),
+            ...(sort && { sort }),
+        }).toString();
+
+        res.render('products', {
+            title: 'Productos',
+            style: 'products.css',
+            products
+        });
+    } catch (error) {
+        console.error('❌ Error al obtener productos paginados:', error);
+        res.status(500).send('Error interno del servidor');
+    }
 });
 
-// REDIRECCIÓN /cart ➡️ /carts/1 (carrito por defecto)
+// Vista que renderiza el HTML vacío (JS lo llena todo)
+viewsRouter.get('/products-dynamic', (req, res) => {
+    res.render('products-dynamic');
+});
+
+// VISTA DINÁMICA DE CARRITO USANDO localStorage
 viewsRouter.get('/cart', (req, res) => {
-    const defaultCartId = 1; // Podrías obtenerlo dinámicamente en el futuro
-    res.redirect(`/carts/${defaultCartId}`);
+    res.render('carts');
 });
 
-
-// CARRITO
+// VISTA CARRITO ESTÁTICA POR ID
 viewsRouter.get('/carts/:cid', async (req, res) => {
-    const cid = parseInt(req.params.cid);
-    const cart = await cartManagerInstance.getCartById(cid);
+    try {
+        const cid = req.params.cid;
 
-    if (!cart) return res.render('error', { message: 'Carrito no encontrado' });
+        // CORREGIDO: cartDao en lugar de cartsDao
+        const cart = await cartDao.getCartById(cid);
 
-    const enrichedProducts = await Promise.all(
-        cart.products.map(async (item) => {
-            const product = await productManager.getById(item.product);
-            return {
-                id: item.product,
-                name: product?.title || 'Producto no disponible',
-                price: product?.price || 0,
-                quantity: item.quantity
-            };
-        })
-    );
-
-    // Calcular el total del carrito
-    const totalPrice = enrichedProducts.reduce((total, item) => total + (item.price * item.quantity), 0);
-
-    res.render('carts', {
-        layout: 'main',
-        cart: {
-            id: cart.id,
-            products: enrichedProducts,
-            totalPrice: totalPrice.toFixed(2)
+        if (!cart) {
+            return res.render('error', { message: 'Carrito no encontrado' });
         }
-    });
+
+        const enrichedProducts = await Promise.all(
+            cart.products.map(async (item) => {
+                const product = await productDao.getProductById(item.product._id || item.product);
+                return {
+                    id: item.product._id || item.product,
+                    name: product?.title || 'Producto no disponible',
+                    price: product?.price || 0,
+                    quantity: item.quantity
+                };
+            })
+        );
+
+        const totalPrice = enrichedProducts.reduce(
+            (total, item) => total + (item.price * item.quantity), 0
+        );
+
+        res.render('carts', {
+            layout: 'main',
+            cart: {
+                id: cart._id,
+                products: enrichedProducts,
+                totalPrice: totalPrice.toFixed(2)
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error al obtener carrito:', error);
+        res.status(500).send('Error interno del servidor');
+    }
 });
 
 export default viewsRouter;
